@@ -149,11 +149,11 @@
 
   .window-title-bar {
     background: linear-gradient(90deg, #808080 0%, #A0A0A0 100%);
-    padding: 2px 3px;
+    padding: 2px 4px;
     display: flex;
     align-items: center;
     gap: 4px;
-    height: 18px;
+    height: 22px;
     cursor: grab;
   }
 
@@ -168,15 +168,15 @@
   .window.win-active .title-text { color: #fff; }
 
   .title-icon {
-    width: 12px; height: 12px;
-    font-size: 9px;
+    width: 14px; height: 14px;
+    font-size: 11px;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
   }
 
   .title-text {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
     flex: 1;
     overflow: hidden;
@@ -184,15 +184,15 @@
     text-overflow: ellipsis;
   }
 
-  .title-buttons { display: flex; gap: 1px; flex-shrink: 0; }
+  .title-buttons { display: flex; gap: 2px; flex-shrink: 0; }
 
   .title-btn {
-    width: 14px; height: 12px;
+    width: 16px; height: 14px;
     background: #C0C0C0;
     border: 1px solid;
     border-color: #FFF #404040 #404040 #FFF;
     display: flex; align-items: center; justify-content: center;
-    font-size: 8px; font-weight: bold; color: #000;
+    font-size: 10px; font-weight: bold; color: #000;
     font-family: 'IBM Plex Mono', monospace;
     cursor: pointer;
   }
@@ -211,8 +211,8 @@
 
   .menu-item {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    padding: 1px 6px;
+    font-size: 12px;
+    padding: 2px 8px;
     color: #000;
     cursor: pointer;
   }
@@ -231,9 +231,9 @@
 
   .status-section {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px;
+    font-size: 11px;
     color: #000;
-    padding: 0 3px;
+    padding: 1px 4px;
     border: 1px solid;
     border-color: #808080 #FFF #FFF #808080;
     flex: 1;
@@ -249,8 +249,8 @@
   /* Button */
   .w95-btn {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    padding: 2px 12px;
+    font-size: 12px;
+    padding: 3px 14px;
     background: #C0C0C0;
     border: 2px solid;
     border-color: #FFF #404040 #404040 #FFF;
@@ -269,7 +269,7 @@
 
   .w95-tab {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px; padding: 2px 8px;
+    font-size: 11px; padding: 3px 10px;
     background: #C0C0C0;
     border: 2px solid;
     border-color: #FFF #404040 #404040 #FFF;
@@ -309,7 +309,7 @@
 
   .rec-indicator {
     display: flex; align-items: center; gap: 2px;
-    font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #0C0;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #0C0;
   }
 
   .rec-dot {
@@ -326,7 +326,7 @@
   }
 
   .scribe-text {
-    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
     color: #000; padding: 3px; line-height: 1.4;
   }
 
@@ -336,8 +336,8 @@
   .chat-area { display: flex; flex-direction: column; gap: 3px; }
 
   .chat-msg {
-    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
-    padding: 2px 5px; line-height: 1.3; max-width: 90%;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    padding: 3px 6px; line-height: 1.4; max-width: 90%;
   }
 
   .chat-msg.user { background: #D0D0FF; border: 1px solid #8080C0; align-self: flex-end; }
@@ -345,8 +345,8 @@
 
   /* Code */
   .code-block {
-    background: #fff; padding: 3px 5px;
-    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    background: #fff; padding: 4px 6px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
     color: #000; line-height: 1.4;
     border: 1px solid #808080;
   }
@@ -357,8 +357,8 @@
 
   /* Notepad */
   .notepad-text {
-    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
-    color: #000; line-height: 1.5; padding: 3px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    color: #000; line-height: 1.5; padding: 4px;
     background: #fff;
   }
 
@@ -386,9 +386,9 @@
 
   /* Alignment viz */
   .align-row {
-    display: flex; gap: 2px; align-items: center;
-    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
-    padding: 2px 0;
+    display: flex; gap: 4px; align-items: center;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    padding: 3px 0;
     border-bottom: 1px solid #E0E0E0;
   }
 
@@ -396,7 +396,7 @@
   .align-arrow { color: #808080; }
   .align-hyp { color: #C00; min-width: 80px; }
   .align-tag {
-    font-size: 8px; padding: 0 3px;
+    font-size: 10px; padding: 1px 4px;
     border: 1px solid; border-radius: 2px;
   }
   .align-tag.match { color: #080; border-color: #080; background: #E0FFE0; }
@@ -420,7 +420,7 @@
   .folder-icon { font-size: 18px; }
 
   .folder-label {
-    font-family: 'IBM Plex Mono', monospace; font-size: 8px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
     color: #000; text-align: center;
   }
 
@@ -428,8 +428,8 @@
   .window-tooltip {
     position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%);
     background: #FFFFCC; color: #000;
-    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
-    padding: 0 4px; border: 1px solid #000;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    padding: 1px 5px; border: 1px solid #000;
     white-space: nowrap; opacity: 0; transition: opacity 0.1s; pointer-events: none;
   }
 
@@ -438,7 +438,7 @@
   /* ===== TASKBAR ===== */
   .taskbar {
     position: absolute; bottom: 0; left: 0; right: 0;
-    height: 24px;
+    height: 28px;
     background: #C0C0C0;
     border-top: 2px solid #FFF;
     display: flex; align-items: center;
@@ -448,8 +448,8 @@
 
   .start-btn {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px; font-weight: bold;
-    padding: 1px 6px;
+    font-size: 12px; font-weight: bold;
+    padding: 2px 8px;
     background: #C0C0C0;
     border: 2px solid;
     border-color: #FFF #404040 #404040 #FFF;
@@ -473,8 +473,8 @@
   .taskbar-items { display: flex; gap: 1px; flex: 1; overflow: hidden; }
 
   .taskbar-item {
-    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
-    padding: 1px 5px; height: 18px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    padding: 2px 6px; height: 20px;
     background: #C0C0C0;
     border: 2px solid;
     border-color: #FFF #404040 #404040 #FFF;
@@ -493,10 +493,10 @@
 
   .taskbar-tray {
     margin-left: auto;
-    padding: 0 4px; height: 18px;
+    padding: 0 6px; height: 20px;
     border: 2px solid;
     border-color: #808080 #FFF #FFF #808080;
-    font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #000;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #000;
     display: flex; align-items: center;
   }
 
@@ -517,7 +517,7 @@
     display: flex; flex-direction: column; overflow: hidden;
   }
 
-  .app-container .window-title-bar { cursor: default; height: 20px; }
+  .app-container .window-title-bar { cursor: default; height: 24px; }
 
   .app-body { flex: 1; overflow-y: auto; padding: 6px; }
 
@@ -531,8 +531,8 @@
   }
 
   .scribe-panel-header {
-    background: #C0C0C0; padding: 2px 6px;
-    font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600;
+    background: #C0C0C0; padding: 3px 8px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600;
     border-bottom: 1px solid #808080;
   }
 
@@ -542,7 +542,7 @@
   }
 
   .speaker { color: #000080; font-weight: bold; }
-  .tag { background: #E0FFE0; border: 1px solid #80C080; padding: 0 3px; font-size: 9px; color: #006000; }
+  .tag { background: #E0FFE0; border: 1px solid #80C080; padding: 1px 4px; font-size: 11px; color: #006000; }
 
   .full-chat { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; min-height: 200px; }
 
@@ -553,7 +553,7 @@
 
   .full-msg.user { background: #D0D0FF; border: 2px solid #8080C0; align-self: flex-end; }
   .full-msg.bot { background: #D0FFD0; border: 2px solid #80C080; align-self: flex-start; }
-  .full-msg .cite { color: #000080; font-size: 10px; }
+  .full-msg .cite { color: #000080; font-size: 11px; }
 
   .full-input-bar { display: flex; gap: 3px; }
   .full-input-bar input {
@@ -596,11 +596,11 @@
   .ea-table { width: 100%; border-collapse: collapse; }
   .ea-table th {
     background: #C0C0C0; text-align: left;
-    padding: 3px 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    padding: 4px 8px; font-family: 'IBM Plex Mono', monospace; font-size: 12px;
     font-weight: 600; border-bottom: 1px solid #808080;
   }
   .ea-table td {
-    padding: 3px 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    padding: 4px 8px; font-family: 'IBM Plex Mono', monospace; font-size: 12px;
     color: #000; border-bottom: 1px solid #C0C0C0;
   }
   .ea-table tr:hover td { background: #D0D0FF; }
@@ -609,7 +609,7 @@
   .desktop-icons {
     position: absolute;
     top: 10px; left: 10px;
-    bottom: 34px;
+    bottom: 38px;
     display: flex; flex-direction: column; flex-wrap: wrap;
     gap: 6px;
     align-content: flex-start;
@@ -639,7 +639,7 @@
 
   .desktop-icon .di-label {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 8px;
+    font-size: 11px;
     color: #fff;
     text-align: center;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
@@ -704,7 +704,7 @@
 
   .apps-folder-label {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 8px;
+    font-size: 11px;
     color: #000;
     text-align: center;
     line-height: 1.3;
@@ -714,7 +714,7 @@
   /* ===== START MENU ===== */
   .start-menu {
     position: absolute;
-    bottom: 24px; left: 2px;
+    bottom: 28px; left: 2px;
     width: 200px;
     background: #C0C0C0;
     border: 2px solid;
@@ -750,8 +750,8 @@
 
   .sm-item {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    padding: 4px 8px 4px 6px;
+    font-size: 12px;
+    padding: 5px 10px 5px 8px;
     color: #000;
     display: flex; align-items: center; gap: 6px;
     position: relative;
@@ -765,7 +765,7 @@
 
   .sm-arrow {
     margin-left: auto;
-    font-size: 8px;
+    font-size: 10px;
   }
 
   .sm-divider {
@@ -808,8 +808,8 @@
 
   .cm-item {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    padding: 3px 20px 3px 8px;
+    font-size: 12px;
+    padding: 4px 22px 4px 10px;
     color: #000;
     white-space: nowrap;
   }
@@ -1021,7 +1021,7 @@
 
   .about-body p {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
+    font-size: 12px;
     color: #000;
     line-height: 1.6;
     margin-bottom: 8px;
@@ -1299,7 +1299,7 @@
 
     .taskbar-item {
       flex: 0 1 70px;
-      font-size: 9px;
+      font-size: 10px;
     }
   }
 </style>
@@ -1463,15 +1463,15 @@ Press <span class="highlight">DEL</span> to enter SETUP
         <div class="w95-tab">Agents</div>
       </div>
       <div class="w95-tab-body">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;">
           <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
             <span>Dictation language</span>
             <span style="color:#808080;">en-US</span>
           </div>
-          <div style="border:1px solid #808080;padding:2px 4px;background:#fff;margin-bottom:3px;color:#808080;font-size:8px;">
+          <div style="border:1px solid #808080;padding:3px 6px;background:#fff;margin-bottom:3px;color:#808080;font-size:11px;">
             Start recording to begin
           </div>
-          <div style="display:flex;justify-content:space-between;font-size:8px;color:#808080;">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#808080;">
             <span>Commands: next_section, delete</span>
             <span style="color:#080;">● Connected</span>
           </div>
@@ -1513,18 +1513,18 @@ Press <span class="highlight">DEL</span> to enter SETUP
       <div class="title-buttons"><div class="title-btn">_</div><div class="title-btn">□</div><div class="title-btn">×</div></div>
     </div>
     <div class="window-content">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;margin-bottom:4px;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;margin-bottom:4px;">
         Can you organize a note faster than Corti's AI?
       </div>
       <div class="progress-outer" style="margin-bottom:4px;">
         <div class="progress-fill" style="width:72%;"></div>
       </div>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;display:flex;justify-content:space-between;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;display:flex;justify-content:space-between;">
         <span>Accuracy: <b>72%</b></span>
         <span style="color:#808080;">12 / 20 fields</span>
       </div>
       <div style="margin-top:4px;">
-        <div class="w95-btn" style="font-size:9px;text-align:center;width:100%;">▶ PLAY NOW</div>
+        <div class="w95-btn" style="font-size:11px;text-align:center;width:100%;">▶ PLAY NOW</div>
       </div>
     </div>
   </div>
@@ -1532,12 +1532,12 @@ Press <span class="highlight">DEL</span> to enter SETUP
   <!-- ===== WINDOW 6: ErrorAlign ===== -->
   <div class="window" data-app="erroralign" style="width:290px;top:52%;left:8%;z-index:13;">
     <div class="window-title-bar">
-      <div class="title-icon" style="font-size:10px;">⇌</div>
+      <div class="title-icon" style="font-size:12px;">⇌</div>
       <div class="title-text">ErrorAlign</div>
       <div class="title-buttons"><div class="title-btn">_</div><div class="title-btn">□</div><div class="title-btn">×</div></div>
     </div>
     <div class="window-content">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;margin-bottom:4px;color:#808080;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;margin-bottom:4px;color:#808080;">
         pip install error-align
       </div>
       <div class="inset" style="padding:3px;margin-bottom:3px;">
@@ -1560,7 +1560,7 @@ Press <span class="highlight">DEL</span> to enter SETUP
           <span class="align-tag sub">SUB</span>
         </div>
       </div>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#808080;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#808080;">
         Raw WER: 7% · Normalized: 3%
       </div>
     </div>
@@ -1575,23 +1575,23 @@ Press <span class="highlight">DEL</span> to enter SETUP
     </div>
     <div class="window-content">
       <div class="inset" style="padding:3px;margin-bottom:3px;background:#F0FFF0;">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#080;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#080;">
           ✓ Recording Complete — 8 facts extracted from 0:33
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;">
         <div class="inset" style="padding:3px;">
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:600;margin-bottom:2px;">Live Transcript</div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:#555;line-height:1.3;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;margin-bottom:2px;">Live Transcript</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#555;line-height:1.3;">
             This is Max, a seven-year-old male neuter golden retriever, about thirty-two kilos...
           </div>
         </div>
         <div class="inset" style="padding:3px;">
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:600;margin-bottom:2px;">Extracted Facts</div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:#555;line-height:1.3;">
-            <span style="color:#080;font-size:7px;">▸</span> Temp: 39.8°C<br>
-            <span style="color:#080;font-size:7px;">▸</span> HR: 110 bpm<br>
-            <span style="color:#080;font-size:7px;">▸</span> Lethargy x 3 days
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;margin-bottom:2px;">Extracted Facts</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#555;line-height:1.3;">
+            <span style="color:#080;">▸</span> Temp: 39.8°C<br>
+            <span style="color:#080;">▸</span> HR: 110 bpm<br>
+            <span style="color:#080;">▸</span> Lethargy x 3 days
           </div>
         </div>
       </div>
@@ -1717,7 +1717,7 @@ Press <span class="highlight">DEL</span> to enter SETUP
 <div class="app-overlay" id="app-erroralign">
   <div class="app-container" style="max-width:720px;">
     <div class="window-title-bar">
-      <div class="title-icon" style="font-size:10px;">⇌</div>
+      <div class="title-icon" style="font-size:12px;">⇌</div>
       <div class="title-text">ErrorAlign — Text-to-Text Alignment for Speech Recognition</div>
       <div class="title-buttons"><div class="title-btn">_</div><div class="title-btn">□</div><div class="title-btn" onclick="closeApp('erroralign')">×</div></div>
     </div>
@@ -1752,21 +1752,21 @@ Press <span class="highlight">DEL</span> to enter SETUP
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
         <div class="inset" style="padding:6px;">
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;margin-bottom:2px;">Raw WER</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;margin-bottom:2px;">Raw WER</div>
           <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:bold;color:#C00;">7%</div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#808080;">Penalizes conventions, fillers, and 1:N mappings</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#808080;">Penalizes conventions, fillers, and 1:N mappings</div>
         </div>
         <div class="inset" style="padding:6px;">
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;margin-bottom:2px;">Normalized WER</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;margin-bottom:2px;">Normalized WER</div>
           <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:bold;color:#008000;">3%</div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#808080;">Adjusting for conventions, fillers, and subword splits</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#808080;">Adjusting for conventions, fillers, and subword splits</div>
         </div>
       </div>
 
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#555;margin-bottom:4px;line-height:1.5;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#555;margin-bottom:4px;line-height:1.5;">
         <b>Why this matters:</b> Vocalized fillers ("um", "uh") account for ~12% of all errors. Conventions like "gonna" → "going to" inflate WER without reflecting real transcription failures. Meanwhile, a misheard drug name (hydroxyzine → hydralazine) carries clinical consequences but costs the same as a harmless filler deletion under standard WER.
       </div>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#555;margin-bottom:8px;line-height:1.5;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#555;margin-bottom:8px;line-height:1.5;">
         ErrorAlign operates at the character level with a beam search and linguistic cost function, then maps results back to word-level alignments. This captures phonetic similarity that Levenshtein misses.
       </div>
 
@@ -1922,22 +1922,22 @@ Press <span class="highlight">DEL</span> to enter SETUP
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;">
         <div class="inset" style="padding:6px;text-align:center;">
           <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:bold;">Go</div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#808080;">85% of codebase</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#808080;">85% of codebase</div>
         </div>
         <div class="inset" style="padding:6px;text-align:center;">
           <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:bold;">v0.105</div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#808080;">Latest release</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#808080;">Latest release</div>
         </div>
         <div class="inset" style="padding:6px;text-align:center;">
           <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:bold;">1</div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#808080;">Single binary</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#808080;">Single binary</div>
         </div>
       </div>
 
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#555;margin-bottom:4px;line-height:1.5;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#555;margin-bottom:4px;line-height:1.5;">
         <b>Key components:</b> Reverse proxy handles inbound traffic on :5000. Aggregator, API Server, and Extension Server run inside K8s. Controller Manager dispatches to Webhook Server and Reconcilers. Kine provides a PostgreSQL-backed etcd replacement on :5432. KMS handles encryption via gRPC. Attestation and Metadata services run outside the cluster boundary.
       </div>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#555;margin-bottom:8px;line-height:1.5;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#555;margin-bottom:8px;line-height:1.5;">
         Tags: kubernetes-controller, baremetal, sovereign-cloud, talos-linux, api
       </div>
 
@@ -2670,7 +2670,7 @@ Press <span class="highlight">DEL</span> to enter SETUP
             win.dataset.origWidth = win.style.width;
             win.dataset.origHeight = win.style.height;
             win.style.left = '0'; win.style.top = '0';
-            win.style.width = '100%'; win.style.height = 'calc(100% - 24px)';
+            win.style.width = '100%'; win.style.height = 'calc(100% - 28px)';
             win.dataset.maximized = 'true';
           }
           zCounter++; win.style.zIndex = zCounter;
