@@ -1,0 +1,2471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Corti OS</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* ===== CUSTOM WIN95 CURSOR ===== */
+  html, html * {
+    cursor: url("icons/cursor.png") 0 0, auto !important;
+  }
+  .resize-handle.r-se { cursor: se-resize !important; }
+  .resize-handle.r-sw { cursor: sw-resize !important; }
+  .resize-handle.r-ne { cursor: ne-resize !important; }
+  .resize-handle.r-nw { cursor: nw-resize !important; }
+  .resize-handle.r-e  { cursor: e-resize !important; }
+  .resize-handle.r-w  { cursor: w-resize !important; }
+  .resize-handle.r-s  { cursor: s-resize !important; }
+  .resize-handle.r-n  { cursor: n-resize !important; }
+  .window-title-bar   { cursor: grab !important; }
+  .window-title-bar:active { cursor: grabbing !important; }
+  textarea, input[type="text"] { cursor: text !important; }
+
+  body {
+    font-family: 'IBM Plex Mono', monospace;
+    background: #008080;
+    margin: 0;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* ===== CRT EFFECTS (fullscreen overlays) ===== */
+
+  /* Scanlines */
+  .crt-scanlines {
+    position: fixed; inset: 0;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,0,0,0.03) 1px, rgba(0,0,0,0.03) 2px);
+    pointer-events: none;
+    z-index: 9999;
+    animation: flicker 0.15s infinite alternate;
+  }
+
+  /* RGB subpixel overlay */
+  .crt-rgb {
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(90deg,
+      rgba(255,0,0,0.015) 0px, rgba(0,255,0,0.015) 1px, rgba(0,100,255,0.015) 2px, transparent 3px);
+    pointer-events: none;
+    z-index: 9998;
+    mix-blend-mode: screen;
+  }
+
+  /* CRT edge shadow (vignette / barrel distortion feel) */
+  .crt-curve {
+    position: fixed; inset: 0;
+    box-shadow: inset 0 0 120px rgba(0,0,0,0.25);
+    pointer-events: none;
+    z-index: 9997;
+  }
+
+  /* CRT flicker */
+  @keyframes flicker {
+    0% { opacity: 0.97; }
+    100% { opacity: 1; }
+  }
+
+  /* ===== DESKTOP (full viewport) ===== */
+  .desktop {
+    width: 100vw;
+    height: 100vh;
+    background: #008080;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+    cursor: default;
+  }
+
+  /* ===== WIN95 WINDOW ===== */
+  .window {
+    position: absolute;
+    background: #C0C0C0;
+    border: 2px solid;
+    border-color: #FFF #404040 #404040 #FFF;
+    box-shadow: inset 1px 1px 0 #DFDFDF, inset -1px -1px 0 #808080;
+    z-index: 10;
+    cursor: default;
+    min-width: 120px;
+    min-height: 60px;
+    overflow: hidden;
+  }
+
+  .resize-handle {
+    position: absolute;
+    z-index: 5;
+  }
+
+  .resize-handle.r-se { bottom: 0; right: 0; width: 12px; height: 12px; cursor: se-resize; }
+  .resize-handle.r-sw { bottom: 0; left: 0; width: 12px; height: 12px; cursor: sw-resize; }
+  .resize-handle.r-ne { top: 0; right: 0; width: 12px; height: 12px; cursor: ne-resize; }
+  .resize-handle.r-nw { top: 0; left: 0; width: 12px; height: 12px; cursor: nw-resize; }
+  .resize-handle.r-e { top: 12px; right: 0; bottom: 12px; width: 5px; cursor: e-resize; }
+  .resize-handle.r-w { top: 12px; left: 0; bottom: 12px; width: 5px; cursor: w-resize; }
+  .resize-handle.r-s { bottom: 0; left: 12px; right: 12px; height: 5px; cursor: s-resize; }
+  .resize-handle.r-n { top: 0; left: 12px; right: 12px; height: 5px; cursor: n-resize; }
+
+  /* Grip indicator on SE corner — classic Win95 3-ridge diagonal */
+  .resize-grip {
+    position: absolute;
+    bottom: 1px; right: 1px;
+    width: 12px; height: 12px;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 6;
+  }
+
+  .resize-grip::before {
+    content: '';
+    position: absolute;
+    right: 0; bottom: 0;
+    width: 12px; height: 12px;
+    background:
+      linear-gradient(135deg,
+        transparent 0%, transparent 35%,
+        #FFF 35%, #FFF 40%,
+        #808080 40%, #808080 45%,
+        transparent 45%, transparent 55%,
+        #FFF 55%, #FFF 60%,
+        #808080 60%, #808080 65%,
+        transparent 65%, transparent 75%,
+        #FFF 75%, #FFF 80%,
+        #808080 80%, #808080 85%,
+        transparent 85%
+      );
+  }
+
+  .window.dragging {
+    opacity: 0.88;
+    z-index: 100 !important;
+  }
+
+  .window-title-bar {
+    background: linear-gradient(90deg, #808080 0%, #A0A0A0 100%);
+    padding: 2px 3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 18px;
+    cursor: grab;
+  }
+
+  .window-title-bar:active { cursor: grabbing; }
+
+  /* Active (focused) window gets blue title bar */
+  .window.win-active .window-title-bar {
+    background: linear-gradient(90deg, #000080 0%, #1084D0 100%);
+  }
+
+  .window .title-text { color: #C0C0C0; }
+  .window.win-active .title-text { color: #fff; }
+
+  .title-icon {
+    width: 12px; height: 12px;
+    font-size: 9px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .title-text {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .title-buttons { display: flex; gap: 1px; flex-shrink: 0; }
+
+  .title-btn {
+    width: 14px; height: 12px;
+    background: #C0C0C0;
+    border: 1px solid;
+    border-color: #FFF #404040 #404040 #FFF;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; font-weight: bold; color: #000;
+    font-family: 'IBM Plex Mono', monospace;
+    cursor: pointer;
+  }
+
+  .title-btn:active {
+    border-color: #404040 #FFF #FFF #404040;
+  }
+
+  /* Menu bar */
+  .menu-bar {
+    background: #C0C0C0;
+    padding: 1px 0;
+    display: flex;
+    border-bottom: 1px solid #808080;
+  }
+
+  .menu-item {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 1px 6px;
+    color: #000;
+    cursor: pointer;
+  }
+
+  .menu-item:hover { background: #000080; color: #fff; }
+
+  .window-content { padding: 4px; overflow: auto; }
+
+  /* Status bar */
+  .status-bar {
+    background: #C0C0C0;
+    border-top: 1px solid #808080;
+    padding: 1px 4px;
+    display: flex; gap: 3px;
+  }
+
+  .status-section {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: #000;
+    padding: 0 3px;
+    border: 1px solid;
+    border-color: #808080 #FFF #FFF #808080;
+    flex: 1;
+  }
+
+  /* Inset */
+  .inset {
+    border: 2px solid;
+    border-color: #808080 #FFF #FFF #808080;
+    background: #fff;
+  }
+
+  /* Button */
+  .w95-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 2px 12px;
+    background: #C0C0C0;
+    border: 2px solid;
+    border-color: #FFF #404040 #404040 #FFF;
+    color: #000;
+    cursor: pointer;
+    box-shadow: inset 1px 1px 0 #DFDFDF;
+  }
+
+  .w95-btn:active {
+    border-color: #404040 #FFF #FFF #404040;
+    box-shadow: inset -1px -1px 0 #DFDFDF;
+  }
+
+  /* Tabs */
+  .w95-tabs { display: flex; margin-bottom: -1px; position: relative; z-index: 1; }
+
+  .w95-tab {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px; padding: 2px 8px;
+    background: #C0C0C0;
+    border: 2px solid;
+    border-color: #FFF #404040 #404040 #FFF;
+    border-bottom: none;
+    border-radius: 2px 2px 0 0;
+    cursor: pointer; color: #000;
+    margin-right: -1px; position: relative; top: 2px;
+  }
+
+  .w95-tab.active {
+    background: #C0C0C0;
+    border-bottom: 2px solid #C0C0C0;
+    top: 0; padding-bottom: 4px; z-index: 2; font-weight: bold;
+  }
+
+  .w95-tab-body {
+    border: 2px solid;
+    border-color: #FFF #404040 #404040 #FFF;
+    background: #C0C0C0;
+    padding: 4px;
+  }
+
+  /* ===== CONTENT STYLES ===== */
+
+  /* Scribe */
+  .scribe-wave-bar {
+    display: flex; align-items: center; gap: 3px;
+    padding: 3px 5px; background: #001000;
+  }
+
+  .wave-dot {
+    width: 2px; background: #0C0;
+    animation: waveAnim 1.2s ease-in-out infinite;
+  }
+
+  @keyframes waveAnim { 0%, 100% { height: 2px; } 50% { height: 10px; } }
+
+  .rec-indicator {
+    display: flex; align-items: center; gap: 2px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #0C0;
+  }
+
+  .rec-dot {
+    width: 5px; height: 5px; background: #C00;
+    border-radius: 50%; animation: blink 1s infinite;
+  }
+
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.1; } }
+
+  .typing-cursor {
+    display: inline-block; width: 5px; height: 10px;
+    background: #000; animation: blink 0.6s steps(1) infinite;
+    vertical-align: middle;
+  }
+
+  .scribe-text {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    color: #000; padding: 3px; line-height: 1.4;
+  }
+
+  .scribe-text .hl { background: #FF0; }
+
+  /* Chat */
+  .chat-area { display: flex; flex-direction: column; gap: 3px; }
+
+  .chat-msg {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    padding: 2px 5px; line-height: 1.3; max-width: 90%;
+  }
+
+  .chat-msg.user { background: #D0D0FF; border: 1px solid #8080C0; align-self: flex-end; }
+  .chat-msg.bot { background: #D0FFD0; border: 1px solid #80C080; align-self: flex-start; }
+
+  /* Code */
+  .code-block {
+    background: #fff; padding: 3px 5px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    color: #000; line-height: 1.4;
+    border: 1px solid #808080;
+  }
+
+  .code-block .kw { color: #800080; font-weight: bold; }
+  .code-block .str { color: #008000; }
+  .code-block .cmt { color: #808080; }
+
+  /* Notepad */
+  .notepad-text {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    color: #000; line-height: 1.5; padding: 3px;
+    background: #fff;
+  }
+
+  /* Progress */
+  .progress-outer {
+    height: 12px; border: 2px solid;
+    border-color: #808080 #FFF #FFF #808080;
+    background: #fff; overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: repeating-linear-gradient(-45deg, #000080, #000080 3px, #1084D0 3px, #1084D0 6px);
+  }
+
+  /* Error align */
+  .error-icon {
+    width: 20px; height: 20px;
+    background: #FFF; border: 2px solid #C00;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: bold; color: #C00;
+    flex-shrink: 0;
+  }
+
+  /* Alignment viz */
+  .align-row {
+    display: flex; gap: 2px; align-items: center;
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    padding: 2px 0;
+    border-bottom: 1px solid #E0E0E0;
+  }
+
+  .align-ref { color: #000; font-weight: bold; min-width: 80px; }
+  .align-arrow { color: #808080; }
+  .align-hyp { color: #C00; min-width: 80px; }
+  .align-tag {
+    font-size: 8px; padding: 0 3px;
+    border: 1px solid; border-radius: 2px;
+  }
+  .align-tag.match { color: #080; border-color: #080; background: #E0FFE0; }
+  .align-tag.sub { color: #C00; border-color: #C00; background: #FFE0E0; }
+  .align-tag.ins { color: #808; border-color: #808; background: #F0E0F0; }
+
+  /* Folders */
+  .folder-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 4px; padding: 2px;
+  }
+
+  .folder-item {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 1px;
+    cursor: pointer; padding: 2px;
+  }
+
+  .folder-item:hover .folder-label { background: #000080; color: #fff; }
+
+  .folder-icon { font-size: 18px; }
+
+  .folder-label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 8px;
+    color: #000; text-align: center;
+  }
+
+  /* Tooltip */
+  .window-tooltip {
+    position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%);
+    background: #FFFFCC; color: #000;
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    padding: 0 4px; border: 1px solid #000;
+    white-space: nowrap; opacity: 0; transition: opacity 0.1s; pointer-events: none;
+  }
+
+  .window:hover .window-tooltip { opacity: 1; }
+
+  /* ===== TASKBAR ===== */
+  .taskbar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 24px;
+    background: #C0C0C0;
+    border-top: 2px solid #FFF;
+    display: flex; align-items: center;
+    padding: 2px; gap: 2px;
+    z-index: 500;
+  }
+
+  .start-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; font-weight: bold;
+    padding: 1px 6px;
+    background: #C0C0C0;
+    border: 2px solid;
+    border-color: #FFF #404040 #404040 #FFF;
+    display: flex; align-items: center; gap: 3px;
+    cursor: pointer; color: #000;
+    height: 18px;
+  }
+
+  .start-btn:active {
+    border-color: #404040 #FFF #FFF #404040;
+  }
+
+  .start-btn svg { flex-shrink: 0; }
+
+  .taskbar-divider {
+    width: 2px; height: 16px; margin: 0 1px;
+    border-left: 1px solid #808080;
+    border-right: 1px solid #FFF;
+  }
+
+  .taskbar-items { display: flex; gap: 1px; flex: 1; overflow: hidden; }
+
+  .taskbar-item {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    padding: 1px 5px; height: 18px;
+    background: #C0C0C0;
+    border: 2px solid;
+    border-color: #FFF #404040 #404040 #FFF;
+    color: #000; white-space: nowrap; cursor: pointer;
+    display: flex; align-items: center; gap: 2px;
+    flex: 0 1 120px; min-width: 40px;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .taskbar-item:active,
+  .taskbar-item.tb-active {
+    border-color: #404040 #FFF #FFF #404040;
+    background: #B0B0B0;
+    font-weight: bold;
+  }
+
+  .taskbar-tray {
+    margin-left: auto;
+    padding: 0 4px; height: 18px;
+    border: 2px solid;
+    border-color: #808080 #FFF #FFF #808080;
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #000;
+    display: flex; align-items: center;
+  }
+
+  /* ===== APP OVERLAY ===== */
+  .app-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 1000; display: none; align-items: center; justify-content: center;
+  }
+
+  .app-overlay.active { display: flex; }
+
+  .app-container {
+    width: 92vw; max-width: 700px; max-height: 85vh;
+    background: #C0C0C0;
+    border: 2px solid;
+    border-color: #FFF #404040 #404040 #FFF;
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.3), inset 1px 1px 0 #DFDFDF;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+
+  .app-container .window-title-bar { cursor: default; height: 20px; }
+
+  .app-body { flex: 1; overflow-y: auto; padding: 6px; }
+
+  /* Full app styles */
+  .scribe-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+
+  .scribe-panel {
+    border: 2px solid;
+    border-color: #808080 #FFF #FFF #808080;
+    background: #fff;
+  }
+
+  .scribe-panel-header {
+    background: #C0C0C0; padding: 2px 6px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600;
+    border-bottom: 1px solid #808080;
+  }
+
+  .scribe-panel-body {
+    padding: 6px; font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; color: #000; line-height: 1.6; min-height: 180px;
+  }
+
+  .speaker { color: #000080; font-weight: bold; }
+  .tag { background: #E0FFE0; border: 1px solid #80C080; padding: 0 3px; font-size: 9px; color: #006000; }
+
+  .full-chat { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; min-height: 200px; }
+
+  .full-msg {
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+    padding: 6px 10px; max-width: 85%; line-height: 1.5;
+  }
+
+  .full-msg.user { background: #D0D0FF; border: 2px solid #8080C0; align-self: flex-end; }
+  .full-msg.bot { background: #D0FFD0; border: 2px solid #80C080; align-self: flex-start; }
+  .full-msg .cite { color: #000080; font-size: 10px; }
+
+  .full-input-bar { display: flex; gap: 3px; }
+  .full-input-bar input {
+    flex: 1; font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+    padding: 3px 6px; border: 2px solid;
+    border-color: #808080 #FFF #FFF #808080;
+    background: #fff; outline: none;
+  }
+
+  .full-notepad {
+    width: 100%; min-height: 250px;
+    border: 2px solid;
+    border-color: #808080 #FFF #FFF #808080;
+    background: #fff; font-family: 'IBM Plex Mono', monospace; font-size: 13px;
+    padding: 6px; resize: none; outline: none; color: #000; line-height: 1.5;
+  }
+
+  /* Studio full */
+  .studio-code {
+    border: 2px solid;
+    border-color: #808080 #FFF #FFF #808080;
+    background: #fff; padding: 8px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+    color: #000; line-height: 1.5; min-height: 60px; margin-bottom: 6px;
+  }
+
+  .studio-code .kw { color: #800080; font-weight: bold; }
+  .studio-code .str { color: #008000; }
+  .studio-code .cmt { color: #808080; }
+
+  .studio-output {
+    border: 2px solid;
+    border-color: #808080 #FFF #FFF #808080;
+    background: #fff; padding: 8px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+    color: #000; line-height: 1.5;
+  }
+
+  /* Error table */
+  .ea-table { width: 100%; border-collapse: collapse; }
+  .ea-table th {
+    background: #C0C0C0; text-align: left;
+    padding: 3px 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    font-weight: 600; border-bottom: 1px solid #808080;
+  }
+  .ea-table td {
+    padding: 3px 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    color: #000; border-bottom: 1px solid #C0C0C0;
+  }
+  .ea-table tr:hover td { background: #D0D0FF; }
+
+  /* ===== DESKTOP ICONS ===== */
+  .desktop-icons {
+    position: absolute;
+    top: 10px; left: 10px;
+    bottom: 34px;
+    display: flex; flex-direction: column; flex-wrap: wrap;
+    gap: 6px;
+    align-content: flex-start;
+    z-index: 5;
+  }
+
+  .desktop-icon {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 2px;
+    width: 72px;
+    padding: 4px 2px;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+
+  .desktop-icon:hover {
+    border-color: rgba(255,255,255,0.15);
+  }
+
+  .desktop-icon .di-icon { font-size: 28px; line-height: 1; }
+
+  .desktop-icon .di-icon-img {
+    width: 32px; height: 32px;
+    image-rendering: pixelated;
+    font-size: 0;
+  }
+
+  .desktop-icon .di-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    color: #fff;
+    text-align: center;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    padding: 1px 3px;
+    line-height: 1.3;
+    word-break: break-word;
+  }
+
+  .desktop-icon.selected .di-label {
+    background: #000080;
+    color: #fff;
+  }
+
+  .desktop-icon.selected .di-icon {
+    filter: brightness(0.8) contrast(1.2);
+    outline: 1px dotted #fff;
+  }
+
+  .desktop-icon.selected .di-icon-img {
+    filter: brightness(0.7) saturate(1.5);
+    outline: 1px dotted #fff;
+  }
+
+  /* ===== APPLICATIONS FOLDER WINDOW ===== */
+  .apps-folder-window .apps-folder-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    padding: 10px;
+    background: #fff;
+    border: 2px solid;
+    border-color: #808080 #FFF #FFF #808080;
+    min-height: 160px;
+  }
+
+  .apps-folder-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 4px;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+
+  .apps-folder-item:hover,
+  .apps-folder-item.selected {
+    background: #000080;
+    border-color: #000080;
+  }
+
+  .apps-folder-item:hover .apps-folder-label,
+  .apps-folder-item.selected .apps-folder-label {
+    color: #fff;
+  }
+
+  .apps-folder-icon {
+    width: 32px;
+    height: 32px;
+    image-rendering: pixelated;
+  }
+
+  .apps-folder-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    color: #000;
+    text-align: center;
+    line-height: 1.3;
+    word-break: break-word;
+  }
+
+  /* ===== START MENU ===== */
+  .start-menu {
+    position: absolute;
+    bottom: 24px; left: 2px;
+    width: 200px;
+    background: #C0C0C0;
+    border: 2px solid;
+    border-color: #FFF #404040 #404040 #FFF;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+    display: none;
+    z-index: 600;
+  }
+
+  .start-menu.open { display: flex; }
+
+  .sm-sidebar {
+    width: 22px;
+    background: linear-gradient(180deg, #000080 0%, #1084D0 100%);
+    display: flex; align-items: flex-end;
+    padding: 4px 2px;
+    flex-shrink: 0;
+  }
+
+  .sm-sidebar-text {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; font-weight: 600;
+    color: #C0C0C0;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    letter-spacing: 1px;
+  }
+
+  .sm-items {
+    flex: 1;
+    padding: 2px 0;
+  }
+
+  .sm-item {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 4px 8px 4px 6px;
+    color: #000;
+    display: flex; align-items: center; gap: 6px;
+    position: relative;
+    white-space: nowrap;
+  }
+
+  .sm-item:hover {
+    background: #000080;
+    color: #fff;
+  }
+
+  .sm-arrow {
+    margin-left: auto;
+    font-size: 8px;
+  }
+
+  .sm-divider {
+    height: 1px;
+    margin: 2px 4px;
+    border-top: 1px solid #808080;
+    border-bottom: 1px solid #FFF;
+  }
+
+  /* Start submenu */
+  .sm-submenu {
+    display: none;
+    position: absolute;
+    left: 100%; top: -2px;
+    background: #C0C0C0;
+    border: 2px solid;
+    border-color: #FFF #404040 #404040 #FFF;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+    min-width: 170px;
+    padding: 2px 0;
+    z-index: 610;
+  }
+
+  .sm-item.has-submenu:hover .sm-submenu { display: block; }
+
+  /* ===== CONTEXT MENU ===== */
+  .context-menu {
+    position: absolute;
+    background: #C0C0C0;
+    border: 2px solid;
+    border-color: #FFF #404040 #404040 #FFF;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+    min-width: 160px;
+    padding: 2px 0;
+    z-index: 550;
+    display: none;
+  }
+
+  .context-menu.open { display: block; }
+
+  .cm-item {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 3px 20px 3px 8px;
+    color: #000;
+    white-space: nowrap;
+  }
+
+  .cm-item:hover {
+    background: #000080;
+    color: #fff;
+  }
+
+  .cm-item.disabled { color: #808080; }
+  .cm-item.disabled:hover { background: none; color: #808080; }
+
+  .cm-divider {
+    height: 1px;
+    margin: 2px 4px;
+    border-top: 1px solid #808080;
+    border-bottom: 1px solid #FFF;
+  }
+
+  /* ===== BOOT SEQUENCE ===== */
+  .boot-overlay {
+    position: fixed; inset: 0;
+    z-index: 10000;
+    display: flex; align-items: center; justify-content: center;
+    background: #000;
+  }
+
+  .boot-overlay.hidden { display: none; }
+
+  .boot-screen-inner {
+    width: 100%; height: 100%;
+    position: relative; overflow: hidden;
+  }
+
+  /* CRT turn-on animation */
+  .crt-on-line {
+    position: absolute;
+    left: 0; right: 0;
+    top: 50%; transform: translateY(-50%);
+    height: 2px;
+    background: rgba(255,255,255,0.9);
+    box-shadow: 0 0 20px rgba(255,255,255,0.5);
+    animation: crtExpand 0.6s ease-out forwards;
+  }
+
+  @keyframes crtExpand {
+    0% { height: 2px; opacity: 1; filter: brightness(2); }
+    60% { height: 100%; opacity: 1; filter: brightness(1.5); }
+    100% { height: 100%; opacity: 1; filter: brightness(1); }
+  }
+
+  .boot-phase {
+    position: absolute; inset: 0;
+    display: none;
+    background: #000;
+    padding: 20px;
+    overflow: hidden;
+  }
+
+  .boot-phase.active { display: block; }
+
+  .bios-text {
+    font-family: 'VT323', monospace;
+    font-size: 14px;
+    color: #AAA;
+    line-height: 1.6;
+    white-space: pre;
+  }
+
+  .bios-text .highlight { color: #fff; }
+
+  .boot-splash {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #000080;
+  }
+
+  .boot-splash.active { display: flex; }
+
+  .splash-logo {
+    font-family: 'VT323', monospace;
+    font-size: 48px;
+    color: #fff;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 0 #000;
+  }
+
+  .splash-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: #C0C0C0;
+    margin-bottom: 20px;
+  }
+
+  .boot-progress {
+    width: 200px; height: 16px;
+    border: 2px solid;
+    border-color: #808080 #FFF #FFF #808080;
+    background: #C0C0C0;
+    overflow: hidden;
+  }
+
+  .boot-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: repeating-linear-gradient(-45deg, #000080, #000080 4px, #1084D0 4px, #1084D0 8px);
+    animation: bootFill 1.5s ease-in-out forwards;
+  }
+
+  @keyframes bootFill {
+    0% { width: 0%; }
+    100% { width: 100%; }
+  }
+
+  /* ===== SHUTDOWN ===== */
+  .shutdown-overlay {
+    position: fixed; inset: 0;
+    z-index: 10000;
+    background: #000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  .shutdown-overlay.active { display: flex; }
+
+  .shutdown-text {
+    font-family: 'VT323', monospace;
+    font-size: 24px;
+    color: #FF8C00;
+    text-align: center;
+  }
+
+  .shutdown-hint {
+    font-family: 'VT323', monospace;
+    font-size: 14px;
+    color: #666;
+    margin-top: 20px;
+    animation: hintPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes hintPulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  /* CRT shutdown animation */
+  .crt-off {
+    animation: crtOff 0.5s ease-in forwards;
+  }
+
+  @keyframes crtOff {
+    0% { transform: scaleY(1) scaleX(1); filter: brightness(1); }
+    60% { transform: scaleY(0.005) scaleX(1); filter: brightness(3); }
+    80% { transform: scaleY(0.005) scaleX(0.01); filter: brightness(4); }
+    100% { transform: scaleY(0) scaleX(0); filter: brightness(0); }
+  }
+
+  /* ===== SCREENSAVER ===== */
+  .screensaver-overlay {
+    position: absolute; inset: 0;
+    background: #000;
+    z-index: 900;
+    display: none;
+    overflow: hidden;
+  }
+
+  .screensaver-overlay.active { display: block; }
+
+  .bouncing-text {
+    position: absolute;
+    font-family: 'VT323', monospace;
+    font-size: 24px;
+    font-weight: bold;
+    white-space: nowrap;
+    text-shadow: 0 0 10px currentColor;
+  }
+
+  /* ===== ABOUT DIALOG ===== */
+  .about-dialog {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    background: #C0C0C0;
+    border: 2px solid;
+    border-color: #FFF #404040 #404040 #FFF;
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.3);
+    z-index: 800;
+    display: none;
+  }
+
+  .about-dialog.open { display: block; }
+
+  .about-body {
+    padding: 10px;
+    text-align: center;
+  }
+
+  .about-body .about-logo {
+    font-family: 'VT323', monospace;
+    font-size: 28px;
+    color: #000080;
+    margin-bottom: 6px;
+  }
+
+  .about-body p {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: #000;
+    line-height: 1.6;
+    margin-bottom: 8px;
+  }
+
+  @media (max-width: 840px) {
+    .scribe-panels { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== BOOT SEQUENCE ===== -->
+<div class="boot-overlay" id="bootScreen">
+  <div class="boot-screen-inner">
+    <div class="crt-on-line" id="crtOnLine"></div>
+    <div class="boot-phase" id="bootBios">
+      <div class="bios-text">
+<span class="highlight">Corti BIOS v1.0</span>
+Copyright (C) 1995-2026 Corti Systems, Inc.
+
+CPU: CortiCore 486DX2-66MHz
+Memory Test: <span id="memCount">0</span>K OK
+
+Detecting IDE drives...
+  Primary Master: CORTI HD-500
+  Primary Slave : CORTI CD-ROM 4X
+
+Press <span class="highlight">DEL</span> to enter SETUP
+      </div>
+    </div>
+    <div class="boot-phase boot-splash" id="bootSplash">
+      <div class="splash-logo">Corti OS</div>
+      <div class="splash-sub">Starting your computer...</div>
+      <div class="boot-progress"><div class="boot-progress-fill" id="bootFill"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SHUTDOWN SCREEN ===== -->
+<div class="shutdown-overlay" id="shutdownOverlay" onclick="reboot()">
+  <div class="shutdown-text">It's now safe to turn off<br>your computer.</div>
+  <div class="shutdown-hint">Click anywhere to restart</div>
+</div>
+
+<!-- ===== MAIN DESKTOP ===== -->
+<div class="desktop" id="desktop">
+  <!-- CRT effect overlays -->
+  <div class="crt-scanlines"></div>
+  <div class="crt-rgb"></div>
+  <div class="crt-curve"></div>
+
+  <!-- Desktop Icons -->
+  <div class="desktop-icons">
+    <div class="desktop-icon" data-dblclick="mycomputer" tabindex="0">
+      <div class="di-icon">🖥️</div>
+      <div class="di-label">My Computer</div>
+    </div>
+    <div class="desktop-icon" data-dblclick="network" tabindex="0">
+      <div class="di-icon">🌐</div>
+      <div class="di-label">Network</div>
+    </div>
+    <div class="desktop-icon" data-dblclick="recyclebin" tabindex="0">
+      <div class="di-icon">🗑️</div>
+      <div class="di-label">Recycle Bin</div>
+    </div>
+    <div class="desktop-icon" data-dblclick="applications" tabindex="0">
+      <div class="di-icon">📂</div>
+      <div class="di-label">Applications</div>
+    </div>
+  </div>
+
+  <!-- Applications Folder Window -->
+  <div class="window apps-folder-window" id="appsFolderWindow" style="width:420px;top:15%;left:25%;z-index:50;display:none;">
+    <div class="window-title-bar">
+      <div class="title-icon">📂</div>
+      <div class="title-text">Applications</div>
+      <div class="title-buttons">
+        <div class="title-btn">×</div>
+      </div>
+    </div>
+    <div class="apps-folder-grid">
+      <div class="apps-folder-item" data-app="clinical">
+        <img class="apps-folder-icon" src="icons/clinical.png" alt="Clinical Super App">
+        <div class="apps-folder-label">Clinical<br>Super App</div>
+      </div>
+      <div class="apps-folder-item" data-app="studio">
+        <img class="apps-folder-icon" src="icons/studio.png" alt="AI Studio">
+        <div class="apps-folder-label">AI Studio</div>
+      </div>
+      <div class="apps-folder-item" data-app="notepad">
+        <img class="apps-folder-icon" src="icons/notepad.png" alt="Notepad">
+        <div class="apps-folder-label">Notepad</div>
+      </div>
+      <div class="apps-folder-item" data-app="docgen">
+        <img class="apps-folder-icon" src="icons/docgen.png" alt="Note Challenge">
+        <div class="apps-folder-label">Note<br>Challenge</div>
+      </div>
+      <div class="apps-folder-item" data-app="erroralign">
+        <img class="apps-folder-icon" src="icons/erroralign.png" alt="ErrorAlign">
+        <div class="apps-folder-label">ErrorAlign</div>
+      </div>
+      <div class="apps-folder-item" data-app="vetai">
+        <img class="apps-folder-icon" src="icons/vetai.png" alt="Vet AI Assistant">
+        <div class="apps-folder-label">Vet AI<br>Assistant</div>
+      </div>
+      <div class="apps-folder-item" data-app="kommodity">
+        <img class="apps-folder-icon" src="icons/kommodity.png" alt="Kommodity">
+        <div class="apps-folder-label">Kommodity</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screensaver (inside desktop) -->
+  <div class="screensaver-overlay" id="screensaver">
+    <div class="bouncing-text" id="bouncingText">CortiOS</div>
+  </div>
+
+  <!-- About Dialog -->
+  <div class="about-dialog" id="aboutDialog">
+    <div class="window-title-bar">
+      <div class="title-icon">ℹ️</div>
+      <div class="title-text">About Corti OS</div>
+      <div class="title-buttons"><div class="title-btn" onclick="closeAbout()">×</div></div>
+    </div>
+    <div class="about-body">
+      <div class="about-logo">Corti OS</div>
+      <p>Version 1.0 (Build 2026)<br>
+      Copyright © 1995-2026 Corti Systems<br><br>
+      486DX2-66MHz Processor<br>
+      640 KB Conventional Memory<br>
+      32 MB Extended Memory<br><br>
+      A Windows 95-style showcase of<br>Corti AI healthcare products.</p>
+      <div class="w95-btn" onclick="closeAbout()" style="margin-top:4px;">OK</div>
+    </div>
+  </div>
+
+  <!-- ===== WINDOW 2: Clinical Super App ===== -->
+  <div class="window" data-app="clinical" style="width:280px;top:25px;left:35px;z-index:17;">
+    <div class="window-title-bar">
+      <div class="title-icon">💬</div>
+      <div class="title-text">Clinical Super App</div>
+      <div class="title-buttons"><div class="title-btn">_</div><div class="title-btn">□</div><div class="title-btn">×</div></div>
+    </div>
+    <div class="window-content">
+      <div class="inset" style="padding:4px;">
+        <div class="chat-area">
+          <div class="chat-msg user">DDx for acute epigastric pain?</div>
+          <div class="chat-msg bot">Consider: peptic ulcer, pancreatitis, biliary colic, GERD, ACS...</div>
+        </div>
+      </div>
+    </div>
+    <div class="status-bar"><div class="status-section">Ready</div></div>
+  </div>
+
+  <!-- ===== WINDOW 3: AI Studio ===== -->
+  <div class="window" data-app="studio" style="width:310px;top:45px;left:62%;z-index:14;">
+    <div class="window-title-bar">
+      <div class="title-icon">⚡</div>
+      <div class="title-text">AI Studio — console.corti.app</div>
+      <div class="title-buttons"><div class="title-btn">_</div><div class="title-btn">□</div><div class="title-btn">×</div></div>
+    </div>
+    <div class="window-content">
+      <div class="w95-tabs">
+        <div class="w95-tab active">Speech-to-Text</div>
+        <div class="w95-tab">Text Gen</div>
+        <div class="w95-tab">Agents</div>
+      </div>
+      <div class="w95-tab-body">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+            <span>Dictation language</span>
+            <span style="color:#808080;">en-US</span>
+          </div>
+          <div style="border:1px solid #808080;padding:2px 4px;background:#fff;margin-bottom:3px;color:#808080;font-size:8px;">
+            Start recording to begin
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:8px;color:#808080;">
+            <span>Commands: next_section, delete</span>
+            <span style="color:#080;">● Connected</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== WINDOW 4: Notepad ===== -->
+  <div class="window" data-app="notepad" style="width:240px;top:55%;left:38%;z-index:11;">
+    <div class="window-title-bar">
+      <div class="title-icon">📝</div>
+      <div class="title-text">Notepad</div>
+      <div class="title-buttons"><div class="title-btn">_</div><div class="title-btn">□</div><div class="title-btn">×</div></div>
+    </div>
+    <div class="menu-bar">
+      <div class="menu-item">File</div>
+      <div class="menu-item">Edit</div>
+      <div class="menu-item">Help</div>
+    </div>
+    <div class="window-content" style="padding:0;">
+      <div class="inset">
+        <div class="notepad-text">
+          [ ] Open websocket to STT<br>
+          [ ] POST to /v1/generate<br>
+          [ ] Define agent pipeline<br>
+          [ ] Validate ICD-10 codes<br>
+          [ ] Write integration tests
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== WINDOW 5: Note Challenge ===== -->
+  <div class="window" data-app="docgen" style="width:280px;top:15px;left:30%;z-index:16;">
+    <div class="window-title-bar">
+      <div class="title-icon">📄</div>
+      <div class="title-text">Note Challenge</div>
+      <div class="title-buttons"><div class="title-btn">_</div><div class="title-btn">□</div><div class="title-btn">×</div></div>
+    </div>
+    <div class="window-content">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;margin-bottom:4px;">
+        Can you organize a note faster than Corti's AI?
+      </div>
+      <div class="progress-outer" style="margin-bottom:4px;">
+        <div class="progress-fill" style="width:72%;"></div>
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;display:flex;justify-content:space-between;">
+        <span>Accuracy: <b>72%</b></span>
+        <span style="color:#808080;">12 / 20 fields</span>
+      </div>
+      <div style="margin-top:4px;">
+        <div class="w95-btn" style="font-size:9px;text-align:center;width:100%;">▶ PLAY NOW</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== WINDOW 6: ErrorAlign ===== -->
+  <div class="window" data-app="erroralign" style="width:290px;top:52%;left:8%;z-index:13;">
+    <div class="window-title-bar">
+      <div class="title-icon" style="font-size:10px;">⇌</div>
+      <div class="title-text">ErrorAlign</div>
+      <div class="title-buttons"><div class="title-btn">_</div><div class="title-btn">□</div><div class="title-btn">×</div></div>
+    </div>
+    <div class="window-content">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;margin-bottom:4px;color:#808080;">
+        pip install error-align
+      </div>
+      <div class="inset" style="padding:3px;margin-bottom:3px;">
+        <div class="align-row">
+          <span class="align-ref">hydroxyzine</span>
+          <span class="align-arrow">→</span>
+          <span class="align-hyp">hydralazine</span>
+          <span class="align-tag sub">SUB</span>
+        </div>
+        <div class="align-row">
+          <span class="align-ref">gonna</span>
+          <span class="align-arrow">→</span>
+          <span class="align-hyp">going to</span>
+          <span class="align-tag match">1:N</span>
+        </div>
+        <div class="align-row" style="border:none;">
+          <span class="align-ref">metoprolol</span>
+          <span class="align-arrow">→</span>
+          <span class="align-hyp">metropolol</span>
+          <span class="align-tag sub">SUB</span>
+        </div>
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#808080;">
+        Raw WER: 7% · Normalized: 3%
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== WINDOW 7: Vet AI Assistant ===== -->
+  <div class="window" data-app="vetai" style="width:300px;top:28%;left:22%;z-index:15;">
+    <div class="window-title-bar">
+      <div class="title-icon">🐾</div>
+      <div class="title-text">Veterinary AI Assistant</div>
+      <div class="title-buttons"><div class="title-btn">_</div><div class="title-btn">□</div><div class="title-btn">×</div></div>
+    </div>
+    <div class="window-content">
+      <div class="inset" style="padding:3px;margin-bottom:3px;background:#F0FFF0;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#080;">
+          ✓ Recording Complete — 8 facts extracted from 0:33
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;">
+        <div class="inset" style="padding:3px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:600;margin-bottom:2px;">Live Transcript</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:#555;line-height:1.3;">
+            This is Max, a seven-year-old male neuter golden retriever, about thirty-two kilos...
+          </div>
+        </div>
+        <div class="inset" style="padding:3px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:600;margin-bottom:2px;">Extracted Facts</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:#555;line-height:1.3;">
+            <span style="color:#080;font-size:7px;">▸</span> Temp: 39.8°C<br>
+            <span style="color:#080;font-size:7px;">▸</span> HR: 110 bpm<br>
+            <span style="color:#080;font-size:7px;">▸</span> Lethargy x 3 days
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="status-bar">
+      <div class="status-section">8 facts · 5 differentials</div>
+    </div>
+  </div>
+
+  <!-- ===== WINDOW 8: Kommodity ===== -->
+  <div class="window" data-app="kommodity" style="width:280px;top:42%;left:65%;z-index:12;">
+    <div class="window-title-bar">
+      <div class="title-icon">📁</div>
+      <div class="title-text">kommodity-io/kommodity</div>
+      <div class="title-buttons"><div class="title-btn">_</div><div class="title-btn">□</div><div class="title-btn">×</div></div>
+    </div>
+    <div class="window-content" style="padding:2px;">
+      <div class="inset" style="padding:2px;">
+        <div class="folder-grid">
+          <div class="folder-item"><div class="folder-icon">📁</div><div class="folder-label">charts/</div></div>
+          <div class="folder-item"><div class="folder-icon">📁</div><div class="folder-label">cmd/</div></div>
+          <div class="folder-item"><div class="folder-icon">📁</div><div class="folder-label">terraform/</div></div>
+          <div class="folder-item"><div class="folder-icon">📁</div><div class="folder-label">pkg/</div></div>
+          <div class="folder-item"><div class="folder-icon">📁</div><div class="folder-label">openapi/</div></div>
+          <div class="folder-item"><div class="folder-icon">📄</div><div class="folder-label">go.mod</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="status-bar">
+      <div class="status-section">v0.105.1 · Go 85%</div>
+      <div class="status-section" style="flex:none;width:40px;">⭐ 13</div>
+    </div>
+  </div>
+
+  <!-- Context Menu (right-click desktop) -->
+  <div class="context-menu" id="contextMenu">
+    <div class="cm-item" onclick="closeContextMenu()">Arrange Icons</div>
+    <div class="cm-item" onclick="closeContextMenu()">Line Up Icons</div>
+    <div class="cm-divider"></div>
+    <div class="cm-item" onclick="closeContextMenu()">Paste</div>
+    <div class="cm-item disabled">Paste Shortcut</div>
+    <div class="cm-divider"></div>
+    <div class="cm-item" onclick="closeContextMenu()">New ▸</div>
+    <div class="cm-divider"></div>
+    <div class="cm-item" onclick="closeContextMenu()">Properties</div>
+  </div>
+
+  <!-- ===== TASKBAR ===== -->
+  <div class="taskbar">
+    <!-- Start Menu (positioned above taskbar) -->
+    <div class="start-menu" id="startMenu">
+      <div class="sm-sidebar">
+        <span class="sm-sidebar-text">Corti<b>OS</b></span>
+      </div>
+      <div class="sm-items">
+        <div class="sm-item has-submenu">
+          📂 <span>Programs</span>
+          <span class="sm-arrow">▸</span>
+          <div class="sm-submenu">
+            <div class="sm-item" onclick="smOpenApp('clinical')">💬 Clinical Super App</div>
+            <div class="sm-item" onclick="smOpenApp('studio')">⚡ AI Studio</div>
+            <div class="sm-item" onclick="smOpenApp('notepad')">📝 Notepad</div>
+            <div class="sm-item" onclick="smOpenApp('docgen')">📄 Note Challenge</div>
+            <div class="sm-item" onclick="smOpenApp('erroralign')">⇌ ErrorAlign</div>
+            <div class="sm-item" onclick="smOpenApp('vetai')">🐾 Vet AI Assistant</div>
+            <div class="sm-item" onclick="smOpenApp('kommodity')">📁 Kommodity</div>
+          </div>
+        </div>
+        <div class="sm-item">📋 Documents</div>
+        <div class="sm-item">⚙️ Settings</div>
+        <div class="sm-item">🔍 Find</div>
+        <div class="sm-item" onclick="smAbout()">❓ Help</div>
+        <div class="sm-divider"></div>
+        <div class="sm-item" onclick="smShutdown()">🔌 Shut Down...</div>
+      </div>
+    </div>
+
+    <div class="start-btn" id="startBtn" onclick="toggleStartMenu(event)">
+      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAOCAYAAAD0f5bSAAACTElEQVQoz22SvUscQQDF38zO3s7czqz3xebIcij4kVsJcUHu0MIuRRBMiquCSBqrQBobLVJE+zSB/A+JV6WxSDCNjSCYIt1VOQuR3ClZb/26W2dSBE2EvPr9eI/Hs/CPNjY2cHx8DMYYOOcol8soFos4OTnBfzU+Pg7OOba3t4nv+/lCoSDHxsbs6elplEolRFF0FxgeHoYxBp7n1YUQ7zjnnzzPa7iuu6aUeuT7vl+r1bC+vv4HMMagXq8Tzvmi4zifXdd96XneZBAEJcdxmlLKJaXU+yiKsjchrFwu4+zsbNYY88K27bUkSfaHhoaglLK73e4lAOvq6upep9MJK5XKQbVa7VDXde00TZcYYx+SJNmv1WqI4xhTU1MDAF1jDAcw6PV6D+I4fry6ugra7XZ9rXXAGPs6MzODvb09AECv1wMh5EhrnSOEnGutM2maPlxeXrYpAEkpNUKI3u7u7u04W1tbAHCutXYYY9oYQ6+vr0WSJDellJ4aY8jFxUVuYmLiFlpYWAAAQSntp2lKCSHasqxT13X71Pf9n4SQH4PB4Emr1UIYhgCAbDYLY0yZUvoLgGCMXWYymW/tdju1pJSm3+8fpWn6SghxcHh42JZSIkkSFsfxc8uyWlrryWKxuCml/N5oNC4BAM1mE0qpp5zzL0KI10qp2SAI7juOs+l53qJS6m0YhiKTyfx9xE2lXC4XCiHecM4/5vP5Z1LKV4VCoVqpVHIrKyvY2dm5e6UoiqCUAgCMjIxkR0dH+fz8PCWEIAgCzM3N3Xp/A9NRy4+jr8AaAAAAAElFTkSuQmCC" width="12" height="12" style="flex-shrink:0;">
+      Start
+    </div>
+    <div class="taskbar-divider"></div>
+    <div class="taskbar-items" id="taskbarItems">
+      <!-- Dynamic window buttons injected by JS -->
+    </div>
+    <div class="taskbar-tray">
+      <span id="soundToggle" onclick="toggleSound(event)" title="Sound" style="margin-right:4px;">🔇</span>
+      <span id="clock">12:00</span>
+    </div>
+  </div>
+
+</div><!-- .desktop -->
+
+<!-- ========== FULL APPS ========== -->
+
+<!-- Notepad -->
+<div class="app-overlay" id="app-notepad">
+  <div class="app-container">
+    <div class="window-title-bar">
+      <div class="title-icon">📝</div>
+      <div class="title-text">Notepad</div>
+      <div class="title-buttons"><div class="title-btn">_</div><div class="title-btn">□</div><div class="title-btn" onclick="closeApp('notepad')">×</div></div>
+    </div>
+    <div class="menu-bar">
+      <div class="menu-item">File</div>
+      <div class="menu-item">Edit</div>
+      <div class="menu-item">Format</div>
+      <div class="menu-item">Help</div>
+    </div>
+    <div class="app-body" style="padding:0;">
+      <textarea class="full-notepad">// corti integration TODO
+
+[ ] Open websocket to /v1/stt/realtime
+[ ] POST transcript to /v1/generate with template: soap_note
+[ ] Define agent pipeline
+[ ] Validate ICD-10 codes from output
+[ ] Write integration tests</textarea>
+    </div>
+  </div>
+</div>
+
+<!-- ErrorAlign -->
+<div class="app-overlay" id="app-erroralign">
+  <div class="app-container" style="max-width:720px;">
+    <div class="window-title-bar">
+      <div class="title-icon" style="font-size:10px;">⇌</div>
+      <div class="title-text">ErrorAlign — Text-to-Text Alignment for Speech Recognition</div>
+      <div class="title-buttons"><div class="title-btn">_</div><div class="title-btn">□</div><div class="title-btn" onclick="closeApp('erroralign')">×</div></div>
+    </div>
+    <div class="menu-bar">
+      <div class="menu-item">File</div>
+      <div class="menu-item">View</div>
+      <div class="menu-item">Analysis</div>
+      <div class="menu-item">Help</div>
+    </div>
+    <div class="app-body">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;margin-bottom:10px;line-height:1.5;">
+        ErrorAlign accurately maps each word in a reference transcript to the model-generated output. Unlike Levenshtein-based alignment, it supports one-to-many and many-to-one mappings, identifying error patterns in drug names, abbreviations, and domain-specific terms that matter most for clinical applications.
+      </div>
+
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;margin-bottom:4px;">Sample Alignment — Whisper / PriMock57</div>
+      <div class="inset" style="padding:4px;margin-bottom:8px;">
+        <table class="ea-table">
+          <thead><tr><th>Reference</th><th></th><th>Model Output</th><th>Type</th></tr></thead>
+          <tbody>
+            <tr><td><b>hydroxyzine</b></td><td style="color:#808080;">→</td><td style="color:#C00;">hydralazine</td><td style="color:#C00;font-weight:600;">SUB (drug name)</td></tr>
+            <tr><td><b>metoprolol</b></td><td style="color:#808080;">→</td><td style="color:#C00;">metropolol</td><td style="color:#C00;font-weight:600;">SUB (drug name)</td></tr>
+            <tr><td><b>gonna</b></td><td style="color:#808080;">→</td><td>going to</td><td style="color:#808;">1:N convention</td></tr>
+            <tr><td><b>kinda ok</b></td><td style="color:#808080;">→</td><td>kind of okay</td><td style="color:#808;">N:N convention</td></tr>
+            <tr><td><b>I'm</b></td><td style="color:#808080;">→</td><td>I am</td><td style="color:#808;">1:N contraction</td></tr>
+            <tr><td><b>prn</b></td><td style="color:#808080;">→</td><td>as needed</td><td style="color:#808;">1:N abbreviation</td></tr>
+            <tr><td><b>um</b></td><td style="color:#808080;">→</td><td style="color:#999;">∅ (deleted)</td><td>DEL filler</td></tr>
+            <tr><td><b>uh</b></td><td style="color:#808080;">→</td><td style="color:#999;">∅ (deleted)</td><td>DEL filler</td></tr>
+            <tr><td><b>alright</b></td><td style="color:#808080;">→</td><td>all right</td><td style="color:#808;">1:N convention</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+        <div class="inset" style="padding:6px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;margin-bottom:2px;">Raw WER</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:bold;color:#C00;">7%</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#808080;">Penalizes conventions, fillers, and 1:N mappings</div>
+        </div>
+        <div class="inset" style="padding:6px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;margin-bottom:2px;">Normalized WER</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:bold;color:#008000;">3%</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#808080;">Adjusting for conventions, fillers, and subword splits</div>
+        </div>
+      </div>
+
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#555;margin-bottom:4px;line-height:1.5;">
+        <b>Why this matters:</b> Vocalized fillers ("um", "uh") account for ~12% of all errors. Conventions like "gonna" → "going to" inflate WER without reflecting real transcription failures. Meanwhile, a misheard drug name (hydroxyzine → hydralazine) carries clinical consequences but costs the same as a harmless filler deletion under standard WER.
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#555;margin-bottom:8px;line-height:1.5;">
+        ErrorAlign operates at the character level with a beam search and linguistic cost function, then maps results back to word-level alignments. This captures phonetic similarity that Levenshtein misses.
+      </div>
+
+      <div style="display:flex;gap:4px;flex-wrap:wrap;">
+        <div class="w95-btn" onclick="window.open('https://github.com/corticph/error-align','_blank')">GitHub ↗</div>
+        <div class="w95-btn" onclick="window.open('https://arxiv.org/abs/2509.24478','_blank')">Read Paper ↗</div>
+        <div class="w95-btn" onclick="window.open('https://pypi.org/project/error-align/','_blank')">pip install error-align</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Kommodity -->
+<div class="app-overlay" id="app-kommodity">
+  <div class="app-container" style="max-width:720px;">
+    <div class="window-title-bar">
+      <div class="title-icon">📁</div>
+      <div class="title-text">Kommodity — Sovereign Cloud Infrastructure</div>
+      <div class="title-buttons"><div class="title-btn">_</div><div class="title-btn">□</div><div class="title-btn" onclick="closeApp('kommodity')">×</div></div>
+    </div>
+    <div class="menu-bar">
+      <div class="menu-item">File</div>
+      <div class="menu-item">View</div>
+      <div class="menu-item">Help</div>
+    </div>
+    <div class="app-body">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;margin-bottom:10px;line-height:1.5;">
+        Kommodity is an open-source sovereign infrastructure platform. A single Go binary that commoditizes compute, storage, and networking for Kubernetes on bare metal. Deploy a full cloud-native stack without vendor lock-in.
+      </div>
+
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;margin-bottom:6px;">Architecture</div>
+      <div class="inset" style="padding:10px;margin-bottom:10px;overflow-x:auto;">
+        <svg viewBox="0 0 750 340" style="width:100%;max-width:680px;display:block;margin:0 auto;" font-family="'IBM Plex Mono', monospace" font-size="9">
+          <defs>
+            <marker id="arrowhead" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+              <polygon points="0 0, 7 2.5, 0 5" fill="#000"/>
+            </marker>
+          </defs>
+
+          <!-- K8s boundary -->
+          <rect x="220" y="28" width="400" height="212" rx="6" fill="none" stroke="#C0C0C0" stroke-dasharray="5,3"/>
+          <text x="232" y="44" fill="#999" font-size="8" font-style="italic">K8s</text>
+
+          <!-- :5000 dot -->
+          <circle cx="12" cy="108" r="4" fill="#000"/>
+          <text x="3" y="96" fill="#808080" font-size="7">:5000</text>
+
+          <!-- Reverse Proxy -->
+          <rect x="52" y="92" width="108" height="32" rx="14" fill="#fff" stroke="#000" stroke-width="1.5"/>
+          <text x="106" y="112" text-anchor="middle" font-size="8.5" font-weight="600">Reverse Proxy</text>
+
+          <!-- KMS -->
+          <rect x="52" y="192" width="108" height="32" rx="14" fill="#fff" stroke="#000" stroke-width="1.5"/>
+          <text x="106" y="212" text-anchor="middle" font-size="8.5" font-weight="600">KMS</text>
+
+          <!-- Aggregator Server -->
+          <rect x="244" y="52" width="100" height="36" rx="14" fill="#fff" stroke="#000" stroke-width="1.5"/>
+          <text x="294" y="68" text-anchor="middle" font-size="8">Aggregator</text>
+          <text x="294" y="79" text-anchor="middle" font-size="8">Server</text>
+
+          <!-- Controller Manager -->
+          <rect x="384" y="52" width="100" height="36" rx="14" fill="#fff" stroke="#000" stroke-width="1.5"/>
+          <text x="434" y="68" text-anchor="middle" font-size="8">Controller</text>
+          <text x="434" y="79" text-anchor="middle" font-size="8">Manager</text>
+
+          <!-- Webhook Server -->
+          <rect x="524" y="38" width="90" height="32" rx="14" fill="#fff" stroke="#000" stroke-width="1.5"/>
+          <text x="569" y="52" text-anchor="middle" font-size="8">Webhook</text>
+          <text x="569" y="63" text-anchor="middle" font-size="8">Server</text>
+
+          <!-- Reconcilers -->
+          <rect x="524" y="86" width="90" height="30" rx="14" fill="#fff" stroke="#000" stroke-width="1.5"/>
+          <text x="569" y="105" text-anchor="middle" font-size="8.5">Reconcilers</text>
+
+          <!-- API Server -->
+          <rect x="244" y="128" width="100" height="32" rx="14" fill="#fff" stroke="#000" stroke-width="1.5"/>
+          <text x="294" y="148" text-anchor="middle" font-size="8.5" font-weight="600">API Server</text>
+
+          <!-- Extension Server -->
+          <rect x="244" y="196" width="100" height="32" rx="14" fill="#fff" stroke="#000" stroke-width="1.5"/>
+          <text x="294" y="210" text-anchor="middle" font-size="8">Extension</text>
+          <text x="294" y="221" text-anchor="middle" font-size="8">Server</text>
+
+          <!-- Kine (outside K8s, far right) -->
+          <rect x="644" y="130" width="70" height="32" rx="14" fill="#fff" stroke="#000" stroke-width="1.5"/>
+          <text x="679" y="150" text-anchor="middle" font-size="8.5" font-weight="600">Kine</text>
+
+          <!-- :5432 dot -->
+          <circle cx="736" cy="146" r="4" fill="#000"/>
+          <text x="726" y="136" fill="#808080" font-size="7">:5432</text>
+
+          <!-- Attestation (below K8s) -->
+          <rect x="234" y="272" width="100" height="28" rx="14" fill="#fff" stroke="#000" stroke-width="1.5"/>
+          <text x="284" y="290" text-anchor="middle" font-size="8.5" font-weight="600">Attestation</text>
+
+          <!-- Metadata (below K8s) -->
+          <rect x="234" y="308" width="100" height="28" rx="14" fill="#fff" stroke="#000" stroke-width="1.5"/>
+          <text x="284" y="326" text-anchor="middle" font-size="8.5" font-weight="600">Metadata</text>
+
+          <!-- === CONNECTIONS === -->
+
+          <!-- :5000 → Reverse Proxy -->
+          <line x1="16" y1="108" x2="50" y2="108" stroke="#000" stroke-width="1.2" marker-end="url(#arrowhead)"/>
+          <text x="22" y="100" fill="#808080" font-size="7">HTTP</text>
+
+          <!-- Reverse Proxy ↓ KMS (gRPC) -->
+          <line x1="106" y1="124" x2="106" y2="190" stroke="#000" stroke-width="1.2" marker-end="url(#arrowhead)"/>
+          <text x="112" y="162" fill="#808080" font-size="7">gRPC</text>
+
+          <!-- Reverse Proxy → trunk horizontal -->
+          <line x1="160" y1="108" x2="200" y2="108" stroke="#000" stroke-width="1.2"/>
+          <text x="162" y="100" fill="#808080" font-size="7">HTTPS</text>
+
+          <!-- Trunk vertical line (full height from Aggregator to Metadata) -->
+          <line x1="200" y1="70" x2="200" y2="322" stroke="#000" stroke-width="1.2"/>
+
+          <!-- HTTP label on trunk (between RP connection and lower branches) -->
+          <text x="178" y="170" fill="#808080" font-size="7">HTTP</text>
+
+          <!-- Trunk → Aggregator -->
+          <line x1="200" y1="70" x2="242" y2="70" stroke="#000" stroke-width="1.2" marker-end="url(#arrowhead)"/>
+
+          <!-- Trunk → API Server -->
+          <line x1="200" y1="144" x2="242" y2="144" stroke="#000" stroke-width="1.2" marker-end="url(#arrowhead)"/>
+
+          <!-- Trunk → Extension Server -->
+          <line x1="200" y1="212" x2="242" y2="212" stroke="#000" stroke-width="1.2" marker-end="url(#arrowhead)"/>
+
+          <!-- Trunk → Attestation -->
+          <line x1="200" y1="286" x2="232" y2="286" stroke="#000" stroke-width="1.2" marker-end="url(#arrowhead)"/>
+
+          <!-- Trunk → Metadata -->
+          <line x1="200" y1="322" x2="232" y2="322" stroke="#000" stroke-width="1.2" marker-end="url(#arrowhead)"/>
+
+          <!-- Aggregator → Controller Manager -->
+          <line x1="344" y1="70" x2="382" y2="70" stroke="#000" stroke-width="1.2" marker-end="url(#arrowhead)"/>
+
+          <!-- Controller Manager → Webhook Server -->
+          <line x1="484" y1="62" x2="522" y2="54" stroke="#000" stroke-width="1.2" marker-end="url(#arrowhead)"/>
+
+          <!-- Controller Manager → Reconcilers -->
+          <line x1="484" y1="78" x2="522" y2="98" stroke="#000" stroke-width="1.2" marker-end="url(#arrowhead)"/>
+
+          <!-- API Server → Kine (gRPC, long horizontal) -->
+          <line x1="344" y1="144" x2="642" y2="146" stroke="#000" stroke-width="1.2" marker-end="url(#arrowhead)"/>
+          <text x="625" y="138" fill="#808080" font-size="7">gRPC</text>
+
+          <!-- Kine → :5432 -->
+          <line x1="714" y1="146" x2="730" y2="146" stroke="#000" stroke-width="1.2" marker-end="url(#arrowhead)"/>
+        </svg>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;">
+        <div class="inset" style="padding:6px;text-align:center;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:bold;">Go</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#808080;">85% of codebase</div>
+        </div>
+        <div class="inset" style="padding:6px;text-align:center;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:bold;">v0.105</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#808080;">Latest release</div>
+        </div>
+        <div class="inset" style="padding:6px;text-align:center;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:bold;">1</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#808080;">Single binary</div>
+        </div>
+      </div>
+
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#555;margin-bottom:4px;line-height:1.5;">
+        <b>Key components:</b> Reverse proxy handles inbound traffic on :5000. Aggregator, API Server, and Extension Server run inside K8s. Controller Manager dispatches to Webhook Server and Reconcilers. Kine provides a PostgreSQL-backed etcd replacement on :5432. KMS handles encryption via gRPC. Attestation and Metadata services run outside the cluster boundary.
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#555;margin-bottom:8px;line-height:1.5;">
+        Tags: kubernetes-controller, baremetal, sovereign-cloud, talos-linux, api
+      </div>
+
+      <div style="display:flex;gap:4px;flex-wrap:wrap;">
+        <div class="w95-btn" onclick="window.open('https://github.com/kommodity-io','_blank')">GitHub ↗</div>
+        <div class="w95-btn" onclick="window.open('https://kommodity.io','_blank')">kommodity.io ↗</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // =============================================
+  // SOUND SYSTEM — Classic 90s PC Sounds
+  // =============================================
+  let audioCtx = null;
+  let soundEnabled = false;
+
+  function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+  }
+
+  // Helper: play a tone
+  function tone(freq, type, vol, start, dur, ctx) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(vol, ctx.currentTime + start);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(ctx.currentTime + start);
+    osc.stop(ctx.currentTime + start + dur);
+  }
+
+  // Helper: white noise burst
+  function noiseBurst(vol, start, dur, ctx) {
+    const bufSize = ctx.sampleRate * dur;
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * vol;
+    const src = ctx.createBufferSource();
+    const gain = ctx.createGain();
+    src.buffer = buf;
+    gain.gain.setValueAtTime(vol, ctx.currentTime + start);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+    src.connect(gain); gain.connect(ctx.destination);
+    src.start(ctx.currentTime + start);
+  }
+
+  // --- UI Click (short tick) ---
+  function playClick() {
+    if (!soundEnabled) return;
+    const ctx = initAudio();
+    tone(1200, 'square', 0.06, 0, 0.025, ctx);
+  }
+
+  // --- Menu open (subtle pop) ---
+  function playMenuOpen() {
+    if (!soundEnabled) return;
+    const ctx = initAudio();
+    tone(600, 'square', 0.05, 0, 0.02, ctx);
+    tone(900, 'square', 0.04, 0.02, 0.02, ctx);
+  }
+
+  // --- Window minimize (descending swoosh) ---
+  function playMinimize() {
+    if (!soundEnabled) return;
+    const ctx = initAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(800, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.12);
+    gain.gain.setValueAtTime(0.06, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + 0.12);
+  }
+
+  // --- Window maximize (ascending chime) ---
+  function playMaximize() {
+    if (!soundEnabled) return;
+    const ctx = initAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(300, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1000, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.06, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + 0.1);
+  }
+
+  // --- Window close (low thunk) ---
+  function playClose() {
+    if (!soundEnabled) return;
+    const ctx = initAudio();
+    tone(300, 'square', 0.07, 0, 0.04, ctx);
+    tone(150, 'triangle', 0.05, 0.02, 0.06, ctx);
+  }
+
+  // --- Error / Exclamation (classic Windows ding) ---
+  function playError() {
+    if (!soundEnabled) return;
+    const ctx = initAudio();
+    tone(440, 'square', 0.08, 0, 0.15, ctx);
+    tone(349.23, 'square', 0.08, 0.15, 0.2, ctx);
+  }
+
+  // --- Startup chime (Win95 tada — ascending major arpeggio with warmth) ---
+  function playStartup() {
+    if (!soundEnabled) return;
+    const ctx = initAudio();
+    // Rich chord layers (sine + triangle for warmth)
+    const chords = [
+      { notes: [261.63, 329.63, 392], time: 0, dur: 0.6 },      // C major
+      { notes: [293.66, 369.99, 440], time: 0.3, dur: 0.6 },     // D major
+      { notes: [329.63, 415.30, 523.25], time: 0.6, dur: 0.8 },  // E major
+      { notes: [523.25, 659.25, 783.99], time: 1.0, dur: 1.0 },  // C major (octave up)
+    ];
+    chords.forEach(ch => {
+      ch.notes.forEach(f => {
+        tone(f, 'sine', 0.06, ch.time, ch.dur, ctx);
+        tone(f, 'triangle', 0.03, ch.time, ch.dur, ctx);
+      });
+    });
+  }
+
+  // --- Shutdown chime (descending, melancholic) ---
+  function playShutdown() {
+    if (!soundEnabled) return;
+    const ctx = initAudio();
+    const notes = [783.99, 659.25, 523.25, 392, 329.63, 261.63];
+    notes.forEach((freq, i) => {
+      tone(freq, 'sine', 0.08, i * 0.18, 0.35, ctx);
+      tone(freq * 0.5, 'triangle', 0.03, i * 0.18, 0.35, ctx);
+    });
+  }
+
+  // --- POST beep (BIOS single beep) ---
+  function playPostBeep() {
+    if (!soundEnabled) return;
+    const ctx = initAudio();
+    tone(1000, 'square', 0.1, 0, 0.15, ctx);
+  }
+
+  // --- Floppy / HDD seek noise ---
+  function playDiskSeek() {
+    if (!soundEnabled) return;
+    const ctx = initAudio();
+    noiseBurst(0.04, 0, 0.03, ctx);
+    noiseBurst(0.03, 0.05, 0.02, ctx);
+    noiseBurst(0.04, 0.08, 0.03, ctx);
+  }
+
+  // --- Navigation ding (folder open, link click) ---
+  function playNavigate() {
+    if (!soundEnabled) return;
+    const ctx = initAudio();
+    tone(880, 'sine', 0.06, 0, 0.08, ctx);
+    tone(1100, 'sine', 0.04, 0.05, 0.08, ctx);
+  }
+
+  // --- Recycle bin empty (crumple noise) ---
+  function playRecycle() {
+    if (!soundEnabled) return;
+    const ctx = initAudio();
+    noiseBurst(0.08, 0, 0.15, ctx);
+    tone(200, 'sawtooth', 0.04, 0, 0.15, ctx);
+  }
+
+  function toggleSound(e) {
+    if (e) e.stopPropagation();
+    soundEnabled = !soundEnabled;
+    document.getElementById('soundToggle').textContent = soundEnabled ? '🔊' : '🔇';
+    if (soundEnabled) { initAudio(); playClick(); }
+  }
+
+  // =============================================
+  // BOOT SEQUENCE
+  // =============================================
+  function runBoot() {
+    const boot = document.getElementById('bootScreen');
+    if (sessionStorage.getItem('cortiOS_booted')) {
+      boot.classList.add('hidden');
+      return;
+    }
+
+    const crtLine = document.getElementById('crtOnLine');
+    const bios = document.getElementById('bootBios');
+    const splash = document.getElementById('bootSplash');
+    const memEl = document.getElementById('memCount');
+
+    // Phase 1: CRT power-on line (0-600ms)
+    setTimeout(() => {
+      crtLine.style.display = 'none';
+      bios.classList.add('active');
+      playPostBeep(); // Classic BIOS single beep
+
+      // Phase 2: BIOS memory count (600-2200ms)
+      let mem = 0;
+      const memInterval = setInterval(() => {
+        mem += 64;
+        if (mem >= 640) { mem = 640; clearInterval(memInterval); }
+        memEl.textContent = mem;
+      }, 100);
+    }, 600);
+
+    // Phase 3: Win95 splash (2200-4200ms)
+    setTimeout(() => {
+      playDiskSeek(); // HDD loading sound
+      bios.classList.remove('active');
+      splash.classList.add('active');
+      // Additional disk seeks during loading
+      setTimeout(() => playDiskSeek(), 400);
+      setTimeout(() => playDiskSeek(), 900);
+      setTimeout(() => playDiskSeek(), 1500);
+    }, 2200);
+
+    // Phase 4: Boot complete (4500ms)
+    setTimeout(() => {
+      boot.style.transition = 'opacity 0.3s';
+      boot.style.opacity = '0';
+      setTimeout(() => {
+        boot.classList.add('hidden');
+        boot.style.opacity = '';
+        sessionStorage.setItem('cortiOS_booted', '1');
+        playStartup();
+      }, 300);
+    }, 4500);
+  }
+
+  // =============================================
+  // CLOCK
+  // =============================================
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  }
+  updateClock();
+  setInterval(updateClock, 30000);
+
+  // =============================================
+  // APP OPEN / CLOSE
+  // =============================================
+  const appMap = {
+    clinical: () => openExternal('https://corti-staging.webflow.io/sample-app/clinical-assistant'),
+    studio: () => openExternal('https://console.corti.app/'),
+    notepad: () => openApp('notepad'),
+    docgen: () => openExternal('https://corti-vercel-new.vercel.app/'),
+    erroralign: () => openApp('erroralign'),
+    vetai: () => openExternal('https://vetai-assistant.vercel.app/'),
+    kommodity: () => openApp('kommodity'),
+  };
+
+  function openApp(name) {
+    playNavigate();
+    document.getElementById('app-' + name).classList.add('active');
+  }
+
+  function closeApp(name) {
+    document.getElementById('app-' + name).classList.remove('active');
+  }
+
+  function openExternal(url) {
+    playNavigate();
+    window.open(url, '_blank');
+  }
+
+  document.querySelectorAll('.app-overlay').forEach(o => {
+    o.addEventListener('click', (e) => { if (e.target === o) o.classList.remove('active'); });
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.app-overlay.active').forEach(o => o.classList.remove('active'));
+      closeStartMenu();
+      closeContextMenu();
+      closeAbout();
+    }
+  });
+
+  // =============================================
+  // START MENU
+  // =============================================
+  function toggleStartMenu(e) {
+    if (e) e.stopPropagation();
+    const menu = document.getElementById('startMenu');
+    const opening = !menu.classList.contains('open');
+    opening ? playMenuOpen() : playClick();
+    menu.classList.toggle('open');
+    closeContextMenu();
+  }
+
+  function closeStartMenu() {
+    document.getElementById('startMenu').classList.remove('open');
+  }
+
+  function smOpenApp(appName) {
+    closeStartMenu();
+    if (appMap[appName]) appMap[appName]();
+  }
+
+  function smAbout() {
+    closeStartMenu();
+    playClick();
+    document.getElementById('aboutDialog').classList.add('open');
+  }
+
+  function closeAbout() {
+    document.getElementById('aboutDialog').classList.remove('open');
+  }
+
+  // =============================================
+  // APPLICATIONS FOLDER
+  // =============================================
+  function openAppsFolder() {
+    playNavigate();
+    const win = document.getElementById('appsFolderWindow');
+    win.style.display = 'block';
+    zCounter++;
+    win.style.zIndex = zCounter;
+    setActiveWindow(win);
+    resetScreensaver();
+  }
+
+  function closeAppsFolder() {
+    playClose();
+    const win = document.getElementById('appsFolderWindow');
+    win.style.display = 'none';
+    if (activeWinEl === win) activeWinEl = null;
+    refreshTaskbar();
+  }
+
+  function smShutdown() {
+    closeStartMenu();
+    playShutdown();
+    // CRT shutdown animation on the desktop
+    const desktop = document.getElementById('desktop');
+    desktop.classList.add('crt-off');
+    setTimeout(() => {
+      document.getElementById('shutdownOverlay').classList.add('active');
+    }, 600);
+  }
+
+  function reboot() {
+    const overlay = document.getElementById('shutdownOverlay');
+    const desktop = document.getElementById('desktop');
+    const boot = document.getElementById('bootScreen');
+
+    // Hide shutdown screen
+    overlay.classList.remove('active');
+
+    // Reset desktop state
+    desktop.classList.remove('crt-off');
+    desktop.style.transform = '';
+    desktop.style.filter = '';
+
+    // Restore all windows to visible
+    document.querySelectorAll('.desktop .window[data-app]').forEach(w => {
+      w.style.display = 'block';
+    });
+    // Hide apps folder
+    const af = document.getElementById('appsFolderWindow');
+    if (af) af.style.display = 'none';
+
+    // Clear boot flag so boot sequence replays
+    sessionStorage.removeItem('cortiOS_booted');
+
+    // Show boot screen and run full boot sequence
+    boot.classList.remove('hidden');
+    boot.style.opacity = '1';
+
+    // Reset boot phases
+    document.getElementById('bootBios').classList.remove('active');
+    document.getElementById('bootSplash').classList.remove('active');
+    const crtLine = document.getElementById('crtOnLine');
+    crtLine.style.animation = 'none';
+    crtLine.offsetHeight; // force reflow
+    crtLine.style.animation = '';
+
+    // Play POST beep then re-run boot
+    playPostBeep();
+    runBoot();
+
+    // Reset window focus and taskbar
+    activeWinEl = null;
+    setTimeout(() => {
+      refreshTaskbar();
+      // Set topmost window as active
+      let topWin = null, topZ = 0;
+      document.querySelectorAll('.desktop .window').forEach(w => {
+        if (w.style.display === 'none') return;
+        const z = parseInt(w.style.zIndex) || 0;
+        if (z >= topZ) { topZ = z; topWin = w; }
+      });
+      if (topWin) setActiveWindow(topWin);
+    }, 5000);
+
+    resetScreensaver();
+  }
+
+  // =============================================
+  // CONTEXT MENU (right-click)
+  // =============================================
+  function closeContextMenu() {
+    document.getElementById('contextMenu').classList.remove('open');
+  }
+
+  document.getElementById('desktop').addEventListener('contextmenu', (e) => {
+    // Only show on empty desktop area
+    if (e.target.closest('.window') || e.target.closest('.taskbar') || e.target.closest('.desktop-icon')) return;
+    e.preventDefault();
+    playMenuOpen();
+    const menu = document.getElementById('contextMenu');
+    const desktop = document.getElementById('desktop');
+    const dr = desktop.getBoundingClientRect();
+    menu.style.left = (e.clientX - dr.left) + 'px';
+    menu.style.top = (e.clientY - dr.top) + 'px';
+    menu.classList.add('open');
+    closeStartMenu();
+  });
+
+  // =============================================
+  // DESKTOP ICONS
+  // =============================================
+  document.querySelectorAll('.desktop-icon').forEach(icon => {
+    icon.addEventListener('click', (e) => {
+      e.stopPropagation();
+      playClick();
+      document.querySelectorAll('.desktop-icon').forEach(i => i.classList.remove('selected'));
+      icon.classList.add('selected');
+      resetScreensaver();
+    });
+    icon.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      const app = icon.dataset.dblclick;
+      if (app === 'mycomputer' || app === 'network' || app === 'recyclebin') return;
+      if (app === 'applications') { openAppsFolder(); return; }
+      if (appMap[app]) appMap[app]();
+    });
+  });
+
+  // Applications folder item clicks
+  document.querySelectorAll('.apps-folder-item').forEach(item => {
+    item.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      const app = item.dataset.app;
+      if (appMap[app]) appMap[app]();
+    });
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      playClick();
+      document.querySelectorAll('.apps-folder-item').forEach(i => i.classList.remove('selected'));
+      item.classList.add('selected');
+    });
+  });
+
+  // Click on empty desktop clears selection and menus, deactivates windows
+  document.getElementById('desktop').addEventListener('click', (e) => {
+    if (e.target.closest('.window') || e.target.closest('.taskbar') || e.target.closest('.desktop-icon') || e.target.closest('.start-menu') || e.target.closest('.context-menu') || e.target.closest('.about-dialog') || e.target.closest('.apps-folder-window')) return;
+    document.querySelectorAll('.desktop-icon').forEach(i => i.classList.remove('selected'));
+    document.querySelectorAll('.desktop .window').forEach(w => w.classList.remove('win-active'));
+    activeWinEl = null;
+    refreshTaskbar();
+    closeStartMenu();
+    closeContextMenu();
+    closeAbout();
+  });
+
+  // =============================================
+  // DYNAMIC TASKBAR + WINDOW FOCUS
+  // =============================================
+  let zCounter = 50;
+  let activeWinEl = null;
+
+  // Window title-bar labels for taskbar buttons
+  const winLabels = {};
+  document.querySelectorAll('.desktop .window').forEach(w => {
+    const tt = w.querySelector('.title-text');
+    if (tt) {
+      // Shorten label to fit taskbar
+      let label = tt.textContent.trim();
+      if (label.length > 14) label = label.slice(0, 13) + '…';
+      const ico = w.querySelector('.title-icon');
+      winLabels[w.id || w.dataset.app] = (ico ? ico.textContent.trim() + ' ' : '') + label;
+    }
+  });
+
+  function setActiveWindow(win) {
+    if (activeWinEl === win) return;
+    document.querySelectorAll('.desktop .window').forEach(w => w.classList.remove('win-active'));
+    if (win) win.classList.add('win-active');
+    activeWinEl = win;
+    refreshTaskbar();
+  }
+
+  function refreshTaskbar() {
+    const container = document.getElementById('taskbarItems');
+    container.innerHTML = '';
+    document.querySelectorAll('.desktop .window').forEach(w => {
+      // Skip hidden (minimized/closed) windows and the apps folder when hidden
+      const isVisible = w.style.display !== 'none';
+      if (!isVisible) return;
+      const key = w.id || w.dataset.app;
+      const label = winLabels[key] || (w.querySelector('.title-text')?.textContent.trim() || 'Window');
+      const btn = document.createElement('div');
+      btn.className = 'taskbar-item';
+      if (w === activeWinEl) btn.classList.add('tb-active');
+      btn.textContent = label;
+      btn.addEventListener('click', () => {
+        if (w === activeWinEl && w.style.display !== 'none') {
+          // Minimize (toggle)
+          playMinimize();
+          w.style.display = 'none';
+          activeWinEl = null;
+          refreshTaskbar();
+        } else {
+          playClick();
+          w.style.display = 'block';
+          zCounter++;
+          w.style.zIndex = zCounter;
+          setActiveWindow(w);
+        }
+      });
+      container.appendChild(btn);
+    });
+  }
+
+  // =============================================
+  // SCREENSAVER
+  // =============================================
+  let ssTimer = null;
+  let ssActive = false;
+  let ssAnimFrame = null;
+  const SS_TIMEOUT = 60000; // 60 seconds
+
+  function startScreensaver() {
+    if (ssActive) return;
+    ssActive = true;
+    const ss = document.getElementById('screensaver');
+    const text = document.getElementById('bouncingText');
+    ss.classList.add('active');
+
+    let x = 100, y = 80, dx = 1.5, dy = 1.2;
+    const colors = ['#ff0000','#00ff00','#ffff00','#00ffff','#ff00ff','#ff8800'];
+    let colorIdx = 0;
+    text.style.color = colors[0];
+
+    function animate() {
+      const bounds = ss.getBoundingClientRect();
+      const tw = text.offsetWidth, th = text.offsetHeight;
+      x += dx; y += dy;
+      if (x <= 0 || x + tw >= bounds.width) { dx = -dx; colorIdx = (colorIdx+1) % colors.length; text.style.color = colors[colorIdx]; }
+      if (y <= 0 || y + th >= bounds.height) { dy = -dy; colorIdx = (colorIdx+1) % colors.length; text.style.color = colors[colorIdx]; }
+      x = Math.max(0, Math.min(bounds.width - tw, x));
+      y = Math.max(0, Math.min(bounds.height - th, y));
+      text.style.left = x + 'px';
+      text.style.top = y + 'px';
+      if (ssActive) ssAnimFrame = requestAnimationFrame(animate);
+    }
+    animate();
+  }
+
+  function stopScreensaver() {
+    if (!ssActive) return;
+    ssActive = false;
+    document.getElementById('screensaver').classList.remove('active');
+    if (ssAnimFrame) cancelAnimationFrame(ssAnimFrame);
+  }
+
+  function resetScreensaver() {
+    stopScreensaver();
+    clearTimeout(ssTimer);
+    ssTimer = setTimeout(startScreensaver, SS_TIMEOUT);
+  }
+
+  ['mousemove','mousedown','keydown','touchstart','scroll'].forEach(evt => {
+    document.addEventListener(evt, resetScreensaver, { passive: true });
+  });
+
+  // (keyboard and HDD LED removed - screen only mode)
+
+  // =============================================
+  // WINDOW DRAG & RESIZE (existing, preserved)
+  // =============================================
+
+  function initDrag() {
+    const desktop = document.querySelector('.desktop');
+    const windows = desktop.querySelectorAll('.window');
+
+    // Fix positions (skip hidden windows like apps folder)
+    windows.forEach(win => {
+      if (win.style.display === 'none') return;
+      const rect = win.getBoundingClientRect();
+      const dr = desktop.getBoundingClientRect();
+      win.style.top = (rect.top - dr.top) + 'px';
+      win.style.left = (rect.left - dr.left) + 'px';
+      win.style.bottom = 'auto';
+      win.style.right = 'auto';
+      win.style.width = rect.width + 'px';
+    });
+
+    // Inject resize handles (skip apps-folder-window — it's not resizable)
+    windows.forEach(win => {
+      if (win.id === 'appsFolderWindow') return;
+      const dirs = ['r-se','r-sw','r-ne','r-nw','r-e','r-w','r-s','r-n'];
+      dirs.forEach(d => {
+        const h = document.createElement('div');
+        h.className = 'resize-handle ' + d;
+        h.dataset.dir = d.replace('r-','');
+        win.appendChild(h);
+      });
+      const grip = document.createElement('div');
+      grip.className = 'resize-grip';
+      win.appendChild(grip);
+    });
+
+    // Resize logic
+    let resizing = null;
+
+    function startResize(win, dir, cx, cy, e) {
+      e.stopPropagation();
+      resizing = {
+        win, dir,
+        startX: cx, startY: cy,
+        origLeft: win.offsetLeft, origTop: win.offsetTop,
+        origW: win.offsetWidth, origH: win.offsetHeight,
+      };
+      zCounter++; win.style.zIndex = zCounter;
+      setActiveWindow(win);
+    }
+
+    function doResize(cx, cy) {
+      if (!resizing) return;
+      const { win, dir, startX, startY, origLeft, origTop, origW, origH } = resizing;
+      const dx = cx - startX, dy = cy - startY;
+      const minW = 120, minH = 60;
+      let newL = origLeft, newT = origTop, newW = origW, newH = origH;
+      if (dir.includes('e')) newW = Math.max(minW, origW + dx);
+      if (dir.includes('w')) { newW = Math.max(minW, origW - dx); newL = origLeft + (origW - newW); }
+      if (dir.includes('s')) newH = Math.max(minH, origH + dy);
+      if (dir.includes('n')) { newH = Math.max(minH, origH - dy); newT = origTop + (origH - newH); }
+      win.style.left = newL + 'px'; win.style.top = newT + 'px';
+      win.style.width = newW + 'px'; win.style.height = newH + 'px';
+    }
+
+    function endResize() { resizing = null; }
+
+    document.addEventListener('mousemove', e => { if (resizing) { e.preventDefault(); doResize(e.clientX, e.clientY); } });
+    document.addEventListener('mouseup', () => { if (resizing) endResize(); });
+    document.addEventListener('touchmove', e => { if (resizing) { e.preventDefault(); doResize(e.touches[0].clientX, e.touches[0].clientY); } }, { passive: false });
+    document.addEventListener('touchend', () => { if (resizing) endResize(); });
+
+    windows.forEach(win => {
+      win.querySelectorAll('.resize-handle').forEach(h => {
+        h.addEventListener('mousedown', e => { e.preventDefault(); startResize(win, h.dataset.dir, e.clientX, e.clientY, e); });
+        h.addEventListener('touchstart', e => { startResize(win, h.dataset.dir, e.touches[0].clientX, e.touches[0].clientY, e); }, { passive: false });
+      });
+    });
+
+    // Window title bar buttons (minimize / maximize / close)
+    windows.forEach(win => {
+      const btns = win.querySelectorAll('.title-btn');
+      if (btns.length >= 3) {
+        // Minimize
+        btns[0].addEventListener('click', (e) => {
+          e.stopPropagation();
+          playMinimize();
+          win.style.display = 'none';
+          if (activeWinEl === win) activeWinEl = null;
+          refreshTaskbar();
+        });
+        // Maximize
+        btns[1].addEventListener('click', (e) => {
+          e.stopPropagation();
+          playMaximize();
+          if (win.dataset.maximized === 'true') {
+            win.style.left = win.dataset.origLeft;
+            win.style.top = win.dataset.origTop;
+            win.style.width = win.dataset.origWidth;
+            win.style.height = win.dataset.origHeight || 'auto';
+            win.dataset.maximized = 'false';
+          } else {
+            win.dataset.origLeft = win.style.left;
+            win.dataset.origTop = win.style.top;
+            win.dataset.origWidth = win.style.width;
+            win.dataset.origHeight = win.style.height;
+            win.style.left = '0'; win.style.top = '0';
+            win.style.width = '100%'; win.style.height = 'calc(100% - 24px)';
+            win.dataset.maximized = 'true';
+          }
+          zCounter++; win.style.zIndex = zCounter;
+          setActiveWindow(win);
+        });
+        // Close
+        btns[2].addEventListener('click', (e) => {
+          e.stopPropagation();
+          playClose();
+          win.style.display = 'none';
+          if (activeWinEl === win) activeWinEl = null;
+          refreshTaskbar();
+        });
+      } else if (btns.length === 1) {
+        // Single close button (e.g. apps folder)
+        // Only add handler if there's no existing onclick
+        if (!btns[0].onclick) {
+          btns[0].addEventListener('click', (e) => {
+            e.stopPropagation();
+            playClick();
+            win.style.display = 'none';
+            if (activeWinEl === win) activeWinEl = null;
+            refreshTaskbar();
+          });
+        }
+      }
+    });
+
+    // Drag + click-to-open
+    windows.forEach(win => {
+      const tb = win.querySelector('.window-title-bar');
+      if (!tb) return;
+      let dragging = false, moved = false, sx, sy, ox, oy;
+
+      function start(cx, cy, e) {
+        if (e.target.closest('.title-btn') || e.target.closest('.resize-handle')) return;
+        dragging = true; moved = false;
+        ox = win.offsetLeft; oy = win.offsetTop;
+        sx = cx; sy = cy;
+        zCounter++; win.style.zIndex = zCounter;
+        setActiveWindow(win);
+        resetScreensaver();
+      }
+
+      function move(cx, cy, e) {
+        if (!dragging || resizing) return;
+        const dx = cx - sx, dy = cy - sy;
+        if (!moved && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) { moved = true; win.classList.add('dragging'); }
+        if (moved) {
+          if (e && e.cancelable) e.preventDefault();
+          const dr = desktop.getBoundingClientRect();
+          win.style.left = Math.max(-win.offsetWidth + 30, Math.min(dr.width - 30, ox + dx)) + 'px';
+          win.style.top = Math.max(0, Math.min(dr.height - 28, oy + dy)) + 'px';
+        }
+      }
+
+      function end() {
+        if (!dragging) return;
+        dragging = false; win.classList.remove('dragging');
+        if (!moved) {
+          const app = win.dataset.app;
+          if (app && appMap[app]) appMap[app]();
+        }
+      }
+
+      tb.addEventListener('mousedown', e => { e.preventDefault(); start(e.clientX, e.clientY, e); });
+      document.addEventListener('mousemove', e => move(e.clientX, e.clientY, e));
+      document.addEventListener('mouseup', end);
+      tb.addEventListener('touchstart', e => start(e.touches[0].clientX, e.touches[0].clientY, e), { passive: true });
+      document.addEventListener('touchmove', e => { if (dragging) move(e.touches[0].clientX, e.touches[0].clientY, e); }, { passive: false });
+      document.addEventListener('touchend', end);
+
+      const body = win.querySelector('.window-content');
+      if (body) {
+        body.style.cursor = 'pointer';
+        body.addEventListener('click', (e) => {
+          if (e.target.closest('.resize-handle')) return;
+          zCounter++; win.style.zIndex = zCounter;
+          setActiveWindow(win);
+          const app = win.dataset.app;
+          if (app && appMap[app]) appMap[app]();
+        });
+      }
+    });
+  }
+
+  // =============================================
+  // INIT
+  // =============================================
+  function init() {
+    runBoot();
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        initDrag();
+        // Set the topmost visible window as initially active
+        let topWin = null, topZ = 0;
+        document.querySelectorAll('.desktop .window').forEach(w => {
+          if (w.style.display === 'none') return;
+          const z = parseInt(w.style.zIndex) || 0;
+          if (z >= topZ) { topZ = z; topWin = w; }
+        });
+        if (topWin) setActiveWindow(topWin);
+        refreshTaskbar();
+      });
+    });
+    resetScreensaver();
+  }
+
+  init();
+</script>
+
+</body>
+</html>
