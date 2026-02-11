@@ -22,7 +22,7 @@
   .resize-handle.r-n  { cursor: n-resize !important; }
   .window-title-bar   { cursor: grab !important; }
   .window-title-bar:active { cursor: grabbing !important; }
-  textarea, input[type="text"] { cursor: text !important; }
+  textarea, input[type="text"] { cursor: text !important; -webkit-user-select: text; user-select: text; }
 
   body {
     font-family: 'IBM Plex Mono', monospace;
@@ -31,6 +31,10 @@
     overflow: hidden;
     height: 100vh;
     width: 100vw;
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   /* ===== CRT EFFECTS (fullscreen overlays) ===== */
@@ -1026,6 +1030,278 @@
   @media (max-width: 840px) {
     .scribe-panels { grid-template-columns: 1fr; }
   }
+
+  /* =======================================================
+     MOBILE / TOUCH RESPONSIVE — phones & small tablets
+     ======================================================= */
+  @media (max-width: 600px) {
+
+    /* --- Taskbar: taller for touch --- */
+    .taskbar {
+      height: 36px;
+      padding: 3px 4px;
+      gap: 3px;
+    }
+
+    .start-btn {
+      font-size: 12px;
+      padding: 2px 10px;
+      height: 28px;
+      gap: 4px;
+    }
+
+    .start-btn svg { width: 16px; height: 16px; }
+
+    .taskbar-divider {
+      height: 22px;
+      margin: 0 2px;
+    }
+
+    .taskbar-items { gap: 2px; }
+
+    .taskbar-item {
+      font-size: 10px;
+      padding: 2px 6px;
+      height: 28px;
+      flex: 0 1 90px;
+      min-width: 36px;
+    }
+
+    .taskbar-tray {
+      height: 28px;
+      font-size: 11px;
+      padding: 0 6px;
+      gap: 4px;
+    }
+
+    /* --- Windows: bigger title bars & buttons --- */
+    .window {
+      min-width: 90vw !important;
+    }
+
+    .window-title-bar {
+      height: 28px;
+      padding: 3px 6px;
+      gap: 6px;
+    }
+
+    .title-text {
+      font-size: 12px;
+    }
+
+    .title-icon {
+      width: 16px; height: 16px;
+      font-size: 11px;
+    }
+
+    .title-buttons { gap: 2px; }
+
+    .title-btn {
+      width: 22px; height: 20px;
+      font-size: 12px;
+    }
+
+    .menu-bar {
+      padding: 2px 0;
+    }
+
+    .menu-item {
+      font-size: 12px;
+      padding: 4px 10px;
+    }
+
+    .window-content {
+      padding: 6px;
+    }
+
+    .status-bar {
+      font-size: 10px;
+      padding: 3px 8px;
+    }
+
+    /* Resize handles larger for touch */
+    .resize-handle.r-se,
+    .resize-handle.r-sw,
+    .resize-handle.r-ne,
+    .resize-handle.r-nw { width: 20px; height: 20px; }
+
+    .resize-handle.r-e,
+    .resize-handle.r-w { width: 10px; top: 20px; bottom: 20px; }
+
+    .resize-handle.r-s,
+    .resize-handle.r-n { height: 10px; left: 20px; right: 20px; }
+
+    .resize-grip {
+      width: 16px; height: 16px;
+      bottom: 2px; right: 2px;
+    }
+
+    .resize-grip::before {
+      width: 16px; height: 16px;
+    }
+
+    /* --- Desktop icons: larger tap targets --- */
+    .desktop-icons {
+      top: 8px; left: 8px;
+      bottom: 44px;
+      gap: 10px;
+    }
+
+    .desktop-icon {
+      width: 80px;
+      padding: 8px 4px;
+    }
+
+    .desktop-icon .di-icon { font-size: 36px; }
+
+    .desktop-icon .di-icon-img {
+      width: 40px; height: 40px;
+    }
+
+    .desktop-icon .di-label {
+      font-size: 10px;
+      padding: 2px 4px;
+    }
+
+    /* --- Start menu: wider, bigger items --- */
+    .start-menu {
+      bottom: 36px;
+      width: 70vw;
+      max-width: 280px;
+    }
+
+    .sm-sidebar {
+      width: 28px;
+    }
+
+    .sm-sidebar-text {
+      font-size: 13px;
+    }
+
+    .sm-item {
+      font-size: 13px;
+      padding: 10px 12px 10px 8px;
+      gap: 8px;
+    }
+
+    .sm-submenu {
+      font-size: 12px;
+    }
+
+    .sm-submenu .sm-item {
+      padding: 8px 10px;
+    }
+
+    /* --- Context menu: larger for touch --- */
+    .context-menu .cm-item {
+      font-size: 12px;
+      padding: 8px 14px;
+    }
+
+    /* --- Applications folder: 2-column grid on mobile --- */
+    .apps-folder-window .apps-folder-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      padding: 12px;
+    }
+
+    .apps-folder-item {
+      padding: 10px 6px;
+      gap: 4px;
+    }
+
+    .apps-folder-icon {
+      width: 40px; height: 40px;
+    }
+
+    .apps-folder-label {
+      font-size: 10px;
+    }
+
+    /* --- About dialog: wider on mobile --- */
+    .about-dialog {
+      width: 90vw !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+    }
+
+    .about-body {
+      padding: 14px;
+    }
+
+    .about-body .about-logo {
+      font-size: 24px;
+    }
+
+    /* --- Boot screen text: scale down gracefully --- */
+    .bios-text {
+      font-size: 10px;
+    }
+
+    .splash-logo {
+      font-size: 36px;
+    }
+
+    .splash-sub {
+      font-size: 12px;
+    }
+
+    .boot-progress {
+      width: 70vw;
+    }
+
+    /* --- Shutdown overlay hint --- */
+    .shutdown-text {
+      font-size: 20px;
+    }
+
+    .shutdown-hint {
+      font-size: 13px;
+    }
+
+    /* --- App overlay: full screen on mobile --- */
+    .app-container {
+      width: 96vw !important;
+      height: 90vh !important;
+      max-width: none !important;
+      max-height: none !important;
+    }
+
+    /* Inner app content: larger text for readability */
+    .scribe-panel-body { font-size: 12px; }
+    .full-msg { font-size: 13px; }
+    .full-notepad { font-size: 14px; min-height: 150px; }
+    .full-input-bar input { font-size: 13px; padding: 6px 8px; }
+    .studio-code { font-size: 12px; }
+    .studio-output { font-size: 12px; }
+    .ea-table th, .ea-table td { font-size: 11px; padding: 5px 8px; }
+    .w95-btn { font-size: 12px; padding: 4px 12px; }
+
+    /* Screensaver text: smaller for mobile */
+    .screensaver-overlay span {
+      font-size: 16px !important;
+    }
+  }
+
+  /* --- Extra small phones (< 400px) --- */
+  @media (max-width: 400px) {
+    .window {
+      min-width: 95vw !important;
+    }
+
+    .apps-folder-window .apps-folder-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .start-menu {
+      width: 85vw;
+    }
+
+    .taskbar-item {
+      flex: 0 1 70px;
+      font-size: 9px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -1988,6 +2264,12 @@ Press <span class="highlight">DEL</span> to enter SETUP
     win.style.display = 'block';
     zCounter++;
     win.style.zIndex = zCounter;
+    // Mobile: size and center the folder
+    if (window.innerWidth <= 600) {
+      win.style.width = '94vw';
+      win.style.left = '3vw';
+      win.style.top = '10px';
+    }
     setActiveWindow(win);
     resetScreensaver();
   }
@@ -2253,6 +2535,36 @@ Press <span class="highlight">DEL</span> to enter SETUP
   // WINDOW DRAG & RESIZE (existing, preserved)
   // =============================================
 
+  function repositionForMobile() {
+    if (window.innerWidth > 600) return;
+    const desktop = document.querySelector('.desktop');
+    const dr = desktop.getBoundingClientRect();
+    const taskbarH = 36;
+    const availW = dr.width;
+    const availH = dr.height - taskbarH;
+    let cascadeX = 4, cascadeY = 4;
+    const step = 20;
+
+    desktop.querySelectorAll('.window').forEach(win => {
+      if (win.style.display === 'none') return;
+      // Size: nearly full width, reasonable height
+      const winW = Math.min(availW - 8, availW * 0.94);
+      const winH = Math.min(availH * 0.45, 260);
+      win.style.width = winW + 'px';
+      win.style.height = winH + 'px';
+      win.style.left = cascadeX + 'px';
+      win.style.top = cascadeY + 'px';
+      win.style.bottom = 'auto';
+      win.style.right = 'auto';
+
+      cascadeX += step;
+      cascadeY += step;
+      // Wrap cascade so windows stay on screen
+      if (cascadeX + winW > availW) cascadeX = 4;
+      if (cascadeY + winH > availH) cascadeY = 4;
+    });
+  }
+
   function initDrag() {
     const desktop = document.querySelector('.desktop');
     const windows = desktop.querySelectorAll('.window');
@@ -2268,6 +2580,9 @@ Press <span class="highlight">DEL</span> to enter SETUP
       win.style.right = 'auto';
       win.style.width = rect.width + 'px';
     });
+
+    // On mobile, cascade windows within viewport
+    repositionForMobile();
 
     // Inject resize handles (skip apps-folder-window — it's not resizable)
     windows.forEach(win => {
