@@ -1367,7 +1367,7 @@ Press <span class="highlight">DEL</span> to enter SETUP
   </div>
 
   <!-- Applications Folder Window -->
-  <div class="window apps-folder-window" id="appsFolderWindow" style="width:420px;top:15%;left:25%;z-index:50;display:none;">
+  <div class="window apps-folder-window" id="appsFolderWindow" style="width:420px;top:15%;left:25%;z-index:50;">
     <div class="window-title-bar">
       <div class="title-icon">📂</div>
       <div class="title-text">Applications</div>
@@ -1432,7 +1432,7 @@ Press <span class="highlight">DEL</span> to enter SETUP
   </div>
 
   <!-- ===== WINDOW 2: Clinical Super App ===== -->
-  <div class="window" data-app="clinical" style="width:280px;top:25px;left:35px;z-index:17;">
+  <div class="window" data-app="clinical" style="width:280px;top:25px;left:35px;z-index:17;display:none;">
     <div class="window-title-bar">
       <div class="title-icon">💬</div>
       <div class="title-text">Clinical Super App</div>
@@ -1506,7 +1506,7 @@ Press <span class="highlight">DEL</span> to enter SETUP
   </div>
 
   <!-- ===== WINDOW 5: Note Challenge ===== -->
-  <div class="window" data-app="docgen" style="width:280px;top:15px;left:30%;z-index:16;">
+  <div class="window" data-app="docgen" style="width:280px;top:15px;left:30%;z-index:16;display:none;">
     <div class="window-title-bar">
       <div class="title-icon">📄</div>
       <div class="title-text">Note Challenge</div>
@@ -1530,7 +1530,7 @@ Press <span class="highlight">DEL</span> to enter SETUP
   </div>
 
   <!-- ===== WINDOW 6: ErrorAlign ===== -->
-  <div class="window" data-app="erroralign" style="width:290px;top:52%;left:8%;z-index:13;">
+  <div class="window" data-app="erroralign" style="width:290px;top:52%;left:8%;z-index:13;display:none;">
     <div class="window-title-bar">
       <div class="title-icon" style="font-size:12px;">⇌</div>
       <div class="title-text">ErrorAlign</div>
@@ -1567,7 +1567,7 @@ Press <span class="highlight">DEL</span> to enter SETUP
   </div>
 
   <!-- ===== WINDOW 7: Vet AI Assistant ===== -->
-  <div class="window" data-app="vetai" style="width:300px;top:28%;left:22%;z-index:15;">
+  <div class="window" data-app="vetai" style="width:300px;top:28%;left:22%;z-index:15;display:none;">
     <div class="window-title-bar">
       <div class="title-icon">🐾</div>
       <div class="title-text">Veterinary AI Assistant</div>
@@ -1602,7 +1602,7 @@ Press <span class="highlight">DEL</span> to enter SETUP
   </div>
 
   <!-- ===== WINDOW 8: Kommodity ===== -->
-  <div class="window" data-app="kommodity" style="width:280px;top:42%;left:65%;z-index:12;">
+  <div class="window" data-app="kommodity" style="width:280px;top:42%;left:65%;z-index:12;display:none;">
     <div class="window-title-bar">
       <div class="title-icon">📁</div>
       <div class="title-text">kommodity-io/kommodity</div>
@@ -2306,13 +2306,14 @@ Press <span class="highlight">DEL</span> to enter SETUP
     desktop.style.transform = '';
     desktop.style.filter = '';
 
-    // Restore all windows to visible
+    // Restore default-open windows only (studio, notepad, apps folder)
+    const defaultOpen = ['studio', 'notepad'];
     document.querySelectorAll('.desktop .window[data-app]').forEach(w => {
-      w.style.display = 'block';
+      w.style.display = defaultOpen.includes(w.dataset.app) ? 'block' : 'none';
     });
-    // Hide apps folder
+    // Show apps folder
     const af = document.getElementById('appsFolderWindow');
-    if (af) af.style.display = 'none';
+    if (af) af.style.display = 'block';
 
     // Clear boot flag so boot sequence replays
     sessionStorage.removeItem('cortiOS_booted');
